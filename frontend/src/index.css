@@ -102,3 +102,42 @@ button:hover {
     font-size: 26px;
   }
 }
+.transaction-list {
+  margin-top: 24px;
+}
+
+.transaction-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  padding: 16px 0;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.transaction-item:last-child {
+  border-bottom: none;
+}
+
+.transaction-item h3 {
+  margin: 0 0 5px;
+  font-size: 16px;
+}
+
+.transaction-item p {
+  margin: 0;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.transaction-item strong {
+  white-space: nowrap;
+}
+
+.income {
+  color: #15803d;
+}
+
+.expense {
+  color: #dc2626;
+}

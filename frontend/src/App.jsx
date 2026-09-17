@@ -8,16 +8,43 @@ function App() {
   const [category, setCategory] = useState("Food");
   const [date, setDate] = useState("");
 
+  const [transactions, setTransactions] = useState([
+    {
+      id: 1,
+      type: "expense",
+      description: "Lunch",
+      amount: 500,
+      category: "Food",
+      date: "2026-09-17",
+    },
+    {
+      id: 2,
+      type: "income",
+      description: "Salary",
+      amount: 25000,
+      category: "Salary",
+      date: "2026-09-15",
+    },
+  ]);
+
   const handleSubmit = (event) => {
     event.preventDefault();
 
-    console.log({
+    const newTransaction = {
+      id: Date.now(),
       type,
       description,
-      amount,
+      amount: Number(amount),
       category,
       date,
-    });
+    };
+
+    setTransactions([newTransaction, ...transactions]);
+
+    setDescription("");
+    setAmount("");
+    setCategory("Food");
+    setDate("");
   };
 
   return (
@@ -107,6 +134,36 @@ function App() {
 
             <button type="submit">Add Transaction</button>
           </form>
+        </section>
+
+        <section className="transaction-card transaction-list">
+          <h2>Recent Transactions</h2>
+
+          {transactions.length === 0 ? (
+            <p>No transactions yet.</p>
+          ) : (
+            transactions.map((transaction) => (
+              <div className="transaction-item" key={transaction.id}>
+                <div>
+                  <h3>{transaction.description}</h3>
+                  <p>
+                    {transaction.category} • {transaction.date}
+                  </p>
+                </div>
+
+                <strong
+                  className={
+                    transaction.type === "income"
+                      ? "income"
+                      : "expense"
+                  }
+                >
+                  {transaction.type === "income" ? "+" : "-"} KSh{" "}
+                  {transaction.amount.toLocaleString()}
+                </strong>
+              </div>
+            ))
+          )}
         </section>
       </main>
     </div>
