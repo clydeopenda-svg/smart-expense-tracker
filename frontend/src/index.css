@@ -1,143 +1,31 @@
-* {
-  box-sizing: border-box;
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
 }
 
-body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  background: #f4f6f8;
-  color: #1f2937;
-}
-
-button,
-input,
-select {
-  font: inherit;
-}
-
-.app {
-  min-height: 100vh;
-}
-
-.app-header {
-  padding: 40px 20px;
-  text-align: center;
-  background: #1f2937;
-  color: white;
-}
-
-.app-header h1 {
-  margin: 0 0 10px;
-  font-size: 32px;
-}
-
-.app-header p {
-  margin: 0;
-  color: #d1d5db;
-}
-
-.container {
-  width: min(100% - 32px, 650px);
-  margin: 40px auto;
-}
-
-.transaction-card {
-  padding: 30px;
+.summary-card {
+  padding: 24px;
   background: white;
   border-radius: 12px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
 }
 
-.transaction-card h2 {
-  margin-top: 0;
-  margin-bottom: 24px;
-}
-
-.form-group {
-  margin-bottom: 18px;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 7px;
-  font-weight: 600;
-}
-
-.form-group input,
-.form-group select {
-  width: 100%;
-  padding: 12px;
-  border: 1px solid #d1d5db;
-  border-radius: 7px;
-  background: white;
-}
-
-.form-group input:focus,
-.form-group select:focus {
-  outline: 2px solid #9ca3af;
-  border-color: #6b7280;
-}
-
-button {
-  width: 100%;
-  padding: 13px;
-  border: none;
-  border-radius: 7px;
-  background: #1f2937;
-  color: white;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-button:hover {
-  background: #374151;
-}
-
-@media (max-width: 600px) {
-  .transaction-card {
-    padding: 20px;
-  }
-
-  .app-header h1 {
-    font-size: 26px;
-  }
-}
-.transaction-list {
-  margin-top: 24px;
-}
-
-.transaction-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 20px;
-  padding: 16px 0;
-  border-bottom: 1px solid #e5e7eb;
-}
-
-.transaction-item:last-child {
-  border-bottom: none;
-}
-
-.transaction-item h3 {
-  margin: 0 0 5px;
-  font-size: 16px;
-}
-
-.transaction-item p {
-  margin: 0;
+.summary-card p {
+  margin: 0 0 8px;
   color: #6b7280;
   font-size: 14px;
+  font-weight: 600;
 }
 
-.transaction-item strong {
-  white-space: nowrap;
+.summary-card h2 {
+  margin: 0;
+  font-size: 24px;
 }
 
-.income {
-  color: #15803d;
-}
-
-.expense {
-  color: #dc2626;
+@media (max-width: 700px) {
+  .summary-grid {
+    grid-template-columns: 1fr;
+  }
 }

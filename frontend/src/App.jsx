@@ -67,17 +67,14 @@ function App() {
     }
   };
 
-  // Calculate total income from all income transactions.
   const totalIncome = transactions
     .filter((transaction) => transaction.type === "income")
     .reduce((total, transaction) => total + Number(transaction.amount), 0);
 
-  // Calculate total expenses from all expense transactions.
   const totalExpenses = transactions
     .filter((transaction) => transaction.type === "expense")
     .reduce((total, transaction) => total + Number(transaction.amount), 0);
 
-  // The balance is what remains after subtracting expenses from income.
   const balance = totalIncome - totalExpenses;
 
   return (
@@ -88,21 +85,21 @@ function App() {
       </header>
 
       <main className="container">
-        <section className="transaction-card">
-          <h2>Financial Summary</h2>
+        <section className="summary-grid">
+          <div className="summary-card">
+            <p>Current Balance</p>
+            <h2>KSh {balance.toLocaleString()}</h2>
+          </div>
 
-          <p>
-            Total Income: <strong>KSh {totalIncome.toLocaleString()}</strong>
-          </p>
+          <div className="summary-card">
+            <p>Total Income</p>
+            <h2>KSh {totalIncome.toLocaleString()}</h2>
+          </div>
 
-          <p>
-            Total Expenses:{" "}
-            <strong>KSh {totalExpenses.toLocaleString()}</strong>
-          </p>
-
-          <p>
-            Current Balance: <strong>KSh {balance.toLocaleString()}</strong>
-          </p>
+          <div className="summary-card">
+            <p>Total Expenses</p>
+            <h2>KSh {totalExpenses.toLocaleString()}</h2>
+          </div>
         </section>
 
         <section className="transaction-card">
