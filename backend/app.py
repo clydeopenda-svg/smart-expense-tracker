@@ -96,6 +96,42 @@ def add_transaction():
     return jsonify(dict(transaction)), 201
 
 
+@app.route("/api/transactions/<int:transaction_id>", methods=["DELETE"])
+def delete_transaction(transaction_id):
+    connection = get_db_connection()
+
+    transaction = connection.execute(
+        """
+        SELECT id
+        FROM transactions
+        WHERE id = ?
+        """,
+        (transaction_id,),
+    ).fetchone()
+
+    if transaction is None:
+        connection.close()
+
+        return jsonify({
+            "error": "Transaction not found"
+        }), 404
+
+    connection.execute(
+        """
+        DELETE FROM transactions
+        WHERE id = ?
+        """,
+        (transaction_id,),
+    )
+
+    connection.commit()
+    connection.close()
+
+    return jsonify({
+        "message": "Transaction deleted successfully"
+    })
+    
+
 if __name__ == "__main__":
     initialize_database()
     app.run(debug=True)

@@ -70,6 +70,26 @@ function App() {
     }
   };
 
+  const handleDelete = async (transactionId) => {
+    try {
+      const response = await fetch(`${API_URL}/${transactionId}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to delete transaction");
+      }
+
+      setTransactions(
+        transactions.filter(
+          (transaction) => transaction.id !== transactionId
+        )
+      );
+    } catch (error) {
+      console.error("Could not delete transaction:", error);
+    }
+  };
+
   const totalIncome = transactions
     .filter((transaction) => transaction.type === "income")
     .reduce((total, transaction) => total + Number(transaction.amount), 0);
@@ -251,14 +271,23 @@ function App() {
                   </p>
                 </div>
 
-                <strong
-                  className={
-                    transaction.type === "income" ? "income" : "expense"
-                  }
-                >
-                  {transaction.type === "income" ? "+" : "-"} KSh{" "}
-                  {Number(transaction.amount).toLocaleString()}
-                </strong>
+                <div className="transaction-actions">
+                  <strong
+                    className={
+                      transaction.type === "income" ? "income" : "expense"
+                    }
+                  >
+                    {transaction.type === "income" ? "+" : "-"} KSh{" "}
+                    {Number(transaction.amount).toLocaleString()}
+                  </strong>
+
+                  <button
+                    className="delete-button"
+                    onClick={() => handleDelete(transaction.id)}
+                  >
+                    Delete
+                  </button>
+                </div>
               </div>
             ))
           )}

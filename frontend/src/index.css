@@ -41,3 +41,26 @@
     grid-template-columns: 1fr;
   }
 }
+.transaction-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.delete-button {
+  width: auto;
+  padding: 8px 12px;
+  background: #dc2626;
+  font-size: 13px;
+}
+
+.delete-button:hover {
+  background: #b91c1c;
+}
+
+@media (max-width: 600px) {
+  .transaction-actions {
+    flex-direction: column;
+    align-items: flex-end;
+  }
+}
