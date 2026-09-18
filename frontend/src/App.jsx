@@ -12,6 +12,7 @@ function App() {
 
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const [filterType, setFilterType] = useState("all");
   const [filterCategory, setFilterCategory] = useState("all");
@@ -24,6 +25,7 @@ function App() {
       setTransactions(data);
     } catch (error) {
       console.error("Could not load transactions:", error);
+      setErrorMessage("Could not connect to the server.");
     } finally {
       setLoading(false);
     }
@@ -36,9 +38,26 @@ function App() {
   const handleSubmit = async (event) => {
     event.preventDefault();
 
+    setErrorMessage("");
+
+    if (!description.trim()) {
+      setErrorMessage("Please enter a description.");
+      return;
+    }
+
+    if (!amount || Number(amount) <= 0) {
+      setErrorMessage("Amount must be greater than zero.");
+      return;
+    }
+
+    if (!date) {
+      setErrorMessage("Please select a date.");
+      return;
+    }
+
     const newTransaction = {
       type,
-      description,
+      description: description.trim(),
       amount: Number(amount),
       category,
       date,
@@ -53,13 +72,13 @@ function App() {
         body: JSON.stringify(newTransaction),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        throw new Error("Failed to add transaction");
+        throw new Error(data.error || "Failed to add transaction");
       }
 
-      const savedTransaction = await response.json();
-
-      setTransactions([savedTransaction, ...transactions]);
+      setTransactions([data, ...transactions]);
 
       setDescription("");
       setAmount("");
@@ -67,6 +86,7 @@ function App() {
       setDate("");
     } catch (error) {
       console.error("Could not add transaction:", error);
+      setErrorMessage(error.message);
     }
   };
 
@@ -87,6 +107,7 @@ function App() {
       );
     } catch (error) {
       console.error("Could not delete transaction:", error);
+      setErrorMessage("Could not delete transaction.");
     }
   };
 
@@ -139,6 +160,10 @@ function App() {
         <section className="transaction-card">
           <h2>Add Transaction</h2>
 
+          {errorMessage && (
+            <p className="error-message">{errorMessage}</p>
+          )}
+
           <form onSubmit={handleSubmit}>
             <div className="form-group">
               <label htmlFor="type">Transaction Type</label>
@@ -173,7 +198,7 @@ function App() {
                 id="amount"
                 type="number"
                 placeholder="e.g. 500"
-                min="0"
+                min="0.01"
                 step="0.01"
                 value={amount}
                 onChange={(event) => setAmount(event.target.value)}

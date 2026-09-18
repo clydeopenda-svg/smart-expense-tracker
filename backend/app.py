@@ -61,7 +61,45 @@ def get_transactions():
 
 @app.route("/api/transactions", methods=["POST"])
 def add_transaction():
-    data = request.get_json()
+    data = request.get_json(silent=True) or {}
+
+    transaction_type = data.get("type")
+    description = str(data.get("description", "")).strip()
+    amount = data.get("amount")
+    category = str(data.get("category", "")).strip()
+    date = data.get("date")
+
+    if transaction_type not in ["income", "expense"]:
+        return jsonify({
+            "error": "Transaction type must be income or expense"
+        }), 400
+
+    if not description:
+        return jsonify({
+            "error": "Description is required"
+        }), 400
+
+    try:
+        amount = float(amount)
+    except (TypeError, ValueError):
+        return jsonify({
+            "error": "Amount must be a valid number"
+        }), 400
+
+    if amount <= 0:
+        return jsonify({
+            "error": "Amount must be greater than zero"
+        }), 400
+
+    if not category:
+        return jsonify({
+            "error": "Category is required"
+        }), 400
+
+    if not date:
+        return jsonify({
+            "error": "Date is required"
+        }), 400
 
     connection = get_db_connection()
 
@@ -72,11 +110,11 @@ def add_transaction():
         VALUES (?, ?, ?, ?, ?)
         """,
         (
-            data.get("type"),
-            data.get("description"),
-            data.get("amount"),
-            data.get("category"),
-            data.get("date"),
+            transaction_type,
+            description,
+            amount,
+            category,
+            date,
         ),
     )
 
@@ -130,7 +168,7 @@ def delete_transaction(transaction_id):
     return jsonify({
         "message": "Transaction deleted successfully"
     })
-    
+
 
 if __name__ == "__main__":
     initialize_database()

@@ -64,3 +64,12 @@
     align-items: flex-end;
   }
 }
+.error-message {
+  margin-bottom: 20px;
+  padding: 12px;
+  border-radius: 7px;
+  background: #fee2e2;
+  color: #b91c1c;
+  font-size: 14px;
+  font-weight: 600;
+}
