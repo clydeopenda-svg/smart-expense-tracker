@@ -13,6 +13,9 @@ function App() {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const [filterType, setFilterType] = useState("all");
+  const [filterCategory, setFilterCategory] = useState("all");
+
   const loadTransactions = async () => {
     try {
       const response = await fetch(API_URL);
@@ -76,6 +79,17 @@ function App() {
     .reduce((total, transaction) => total + Number(transaction.amount), 0);
 
   const balance = totalIncome - totalExpenses;
+
+  const filteredTransactions = transactions.filter((transaction) => {
+    const matchesType =
+      filterType === "all" || transaction.type === filterType;
+
+    const matchesCategory =
+      filterCategory === "all" ||
+      transaction.category === filterCategory;
+
+    return matchesType && matchesCategory;
+  });
 
   return (
     <div className="app">
@@ -186,12 +200,49 @@ function App() {
         <section className="transaction-card transaction-list">
           <h2>Recent Transactions</h2>
 
+          <div className="filter-grid">
+            <div className="form-group">
+              <label htmlFor="filter-type">Type</label>
+
+              <select
+                id="filter-type"
+                value={filterType}
+                onChange={(event) => setFilterType(event.target.value)}
+              >
+                <option value="all">All</option>
+                <option value="income">Income</option>
+                <option value="expense">Expenses</option>
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="filter-category">Category</label>
+
+              <select
+                id="filter-category"
+                value={filterCategory}
+                onChange={(event) => setFilterCategory(event.target.value)}
+              >
+                <option value="all">All Categories</option>
+                <option value="Food">Food</option>
+                <option value="Transport">Transport</option>
+                <option value="Bills">Bills</option>
+                <option value="Shopping">Shopping</option>
+                <option value="Entertainment">Entertainment</option>
+                <option value="Health">Health</option>
+                <option value="Education">Education</option>
+                <option value="Salary">Salary</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+          </div>
+
           {loading ? (
             <p>Loading transactions...</p>
-          ) : transactions.length === 0 ? (
-            <p>No transactions yet.</p>
+          ) : filteredTransactions.length === 0 ? (
+            <p>No matching transactions found.</p>
           ) : (
-            transactions.map((transaction) => (
+            filteredTransactions.map((transaction) => (
               <div className="transaction-item" key={transaction.id}>
                 <div>
                   <h3>{transaction.description}</h3>
