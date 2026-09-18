@@ -67,6 +67,19 @@ function App() {
     }
   };
 
+  // Calculate total income from all income transactions.
+  const totalIncome = transactions
+    .filter((transaction) => transaction.type === "income")
+    .reduce((total, transaction) => total + Number(transaction.amount), 0);
+
+  // Calculate total expenses from all expense transactions.
+  const totalExpenses = transactions
+    .filter((transaction) => transaction.type === "expense")
+    .reduce((total, transaction) => total + Number(transaction.amount), 0);
+
+  // The balance is what remains after subtracting expenses from income.
+  const balance = totalIncome - totalExpenses;
+
   return (
     <div className="app">
       <header className="app-header">
@@ -75,6 +88,23 @@ function App() {
       </header>
 
       <main className="container">
+        <section className="transaction-card">
+          <h2>Financial Summary</h2>
+
+          <p>
+            Total Income: <strong>KSh {totalIncome.toLocaleString()}</strong>
+          </p>
+
+          <p>
+            Total Expenses:{" "}
+            <strong>KSh {totalExpenses.toLocaleString()}</strong>
+          </p>
+
+          <p>
+            Current Balance: <strong>KSh {balance.toLocaleString()}</strong>
+          </p>
+        </section>
+
         <section className="transaction-card">
           <h2>Add Transaction</h2>
 
