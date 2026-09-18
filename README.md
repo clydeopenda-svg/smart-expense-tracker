@@ -1,51 +1,57 @@
 # Smart Expense Tracker
 
-Smart Expense Tracker is a full-stack web application that helps users
-record, organize, and understand their income and expenses.
+A full-stack personal finance application for tracking income, expenses, budgets, and spending patterns.
 
-## Problem
+## Features
 
-Managing personal finances can be difficult when transactions are
-recorded in different places or not tracked at all.
-
-## Solution
-
-Smart Expense Tracker provides one simple place to record transactions
-and understand spending habits.
-
-## Planned Features
-
-- Add income and expenses
+- Add income and expense transactions
 - Categorize transactions
-- View account balance
-- View spending summaries
-- Filter transactions
-- Set monthly budgets
-- Track spending against budgets
-- Display spending charts
-- Provide useful spending insights
+- View current balance
+- View total income
+- View total expenses
+- Filter transactions by type
+- Filter transactions by category
+- Delete transactions
+- Set a monthly spending budget
+- Track remaining budget
+- View spending by category
+- Responsive design for desktop, tablet, and mobile
+- Backend API tests
 
-## Technology Stack
+## Technologies
+
+### Frontend
 
 - React
 - Vite
-- Flask
-- SQLite
-- Python
 - JavaScript
+- CSS
+
+### Backend
+
+- Python
+- Flask
+- Flask-CORS
+- SQLite
+- Pytest
 
 ## Project Structure
 
-The project will contain:
-
-- `frontend/` — React user interface
-- `backend/` — Flask API
-- `database/` — SQLite data
-
-## Project Status
-
-The project is currently under development.
-
-## Author
-
-Clyde Openda
+```text
+smart-expense-tracker/
+├── backend/
+│   ├── tests/
+│   │   └── test_app.py
+│   ├── app.py
+│   ├── requirements.txt
+│   └── expenses.db
+│
+├── frontend/
+│   ├── src/
+│   │   ├── App.jsx
+│   │   └── index.css
+│   ├── package.json
+│   └── ...
+│
+├── .gitignore
+└── README.md
