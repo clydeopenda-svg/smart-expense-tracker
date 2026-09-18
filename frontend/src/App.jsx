@@ -1,5 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import "./index.css";
+
+const API_URL = "http://127.0.0.1:5000/api/transactions";
 
 function App() {
   const [type, setType] = useState("expense");
@@ -8,30 +10,30 @@ function App() {
   const [category, setCategory] = useState("Food");
   const [date, setDate] = useState("");
 
-  const [transactions, setTransactions] = useState([
-    {
-      id: 1,
-      type: "expense",
-      description: "Lunch",
-      amount: 500,
-      category: "Food",
-      date: "2026-09-17",
-    },
-    {
-      id: 2,
-      type: "income",
-      description: "Salary",
-      amount: 25000,
-      category: "Salary",
-      date: "2026-09-15",
-    },
-  ]);
+  const [transactions, setTransactions] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const handleSubmit = (event) => {
+  const loadTransactions = async () => {
+    try {
+      const response = await fetch(API_URL);
+      const data = await response.json();
+
+      setTransactions(data);
+    } catch (error) {
+      console.error("Could not load transactions:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadTransactions();
+  }, []);
+
+  const handleSubmit = async (event) => {
     event.preventDefault();
 
     const newTransaction = {
-      id: Date.now(),
       type,
       description,
       amount: Number(amount),
@@ -39,12 +41,30 @@ function App() {
       date,
     };
 
-    setTransactions([newTransaction, ...transactions]);
+    try {
+      const response = await fetch(API_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(newTransaction),
+      });
 
-    setDescription("");
-    setAmount("");
-    setCategory("Food");
-    setDate("");
+      if (!response.ok) {
+        throw new Error("Failed to add transaction");
+      }
+
+      const savedTransaction = await response.json();
+
+      setTransactions([savedTransaction, ...transactions]);
+
+      setDescription("");
+      setAmount("");
+      setCategory("Food");
+      setDate("");
+    } catch (error) {
+      console.error("Could not add transaction:", error);
+    }
   };
 
   return (
@@ -139,7 +159,9 @@ function App() {
         <section className="transaction-card transaction-list">
           <h2>Recent Transactions</h2>
 
-          {transactions.length === 0 ? (
+          {loading ? (
+            <p>Loading transactions...</p>
+          ) : transactions.length === 0 ? (
             <p>No transactions yet.</p>
           ) : (
             transactions.map((transaction) => (
@@ -153,13 +175,11 @@ function App() {
 
                 <strong
                   className={
-                    transaction.type === "income"
-                      ? "income"
-                      : "expense"
+                    transaction.type === "income" ? "income" : "expense"
                   }
                 >
                   {transaction.type === "income" ? "+" : "-"} KSh{" "}
-                  {transaction.amount.toLocaleString()}
+                  {Number(transaction.amount).toLocaleString()}
                 </strong>
               </div>
             ))
