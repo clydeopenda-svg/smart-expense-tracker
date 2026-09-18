@@ -73,3 +73,16 @@
   font-size: 14px;
   font-weight: 600;
 }
+.budget-card {
+  margin-bottom: 24px;
+}
+
+.budget-summary {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.budget-summary p {
+  margin: 8px 0;
+}

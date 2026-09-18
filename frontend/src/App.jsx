@@ -17,6 +17,11 @@ function App() {
   const [filterType, setFilterType] = useState("all");
   const [filterCategory, setFilterCategory] = useState("all");
 
+  const [monthlyBudget, setMonthlyBudget] = useState(
+    Number(localStorage.getItem("monthlyBudget")) || 0
+  );
+  const [budgetInput, setBudgetInput] = useState("");
+
   const loadTransactions = async () => {
     try {
       const response = await fetch(API_URL);
@@ -111,6 +116,22 @@ function App() {
     }
   };
 
+  const handleBudgetSubmit = (event) => {
+    event.preventDefault();
+
+    const newBudget = Number(budgetInput);
+
+    if (newBudget <= 0) {
+      setErrorMessage("Monthly budget must be greater than zero.");
+      return;
+    }
+
+    localStorage.setItem("monthlyBudget", newBudget);
+    setMonthlyBudget(newBudget);
+    setBudgetInput("");
+    setErrorMessage("");
+  };
+
   const totalIncome = transactions
     .filter((transaction) => transaction.type === "income")
     .reduce((total, transaction) => total + Number(transaction.amount), 0);
@@ -131,6 +152,8 @@ function App() {
 
     return matchesType && matchesCategory;
   });
+
+  const budgetRemaining = monthlyBudget - totalExpenses;
 
   return (
     <div className="app">
@@ -155,6 +178,59 @@ function App() {
             <p>Total Expenses</p>
             <h2>KSh {totalExpenses.toLocaleString()}</h2>
           </div>
+        </section>
+
+        <section className="transaction-card budget-card">
+          <h2>Monthly Budget</h2>
+
+          <form onSubmit={handleBudgetSubmit}>
+            <div className="form-group">
+              <label htmlFor="budget">Set Monthly Budget</label>
+
+              <input
+                id="budget"
+                type="number"
+                min="1"
+                step="0.01"
+                placeholder="e.g. 30000"
+                value={budgetInput}
+                onChange={(event) => setBudgetInput(event.target.value)}
+              />
+            </div>
+
+            <button type="submit">Save Budget</button>
+          </form>
+
+          {monthlyBudget > 0 && (
+            <div className="budget-summary">
+              <p>
+                Budget:{" "}
+                <strong>KSh {monthlyBudget.toLocaleString()}</strong>
+              </p>
+
+              <p>
+                Spent:{" "}
+                <strong>KSh {totalExpenses.toLocaleString()}</strong>
+              </p>
+
+              <p>
+                Remaining:{" "}
+                <strong
+                  className={
+                    budgetRemaining < 0 ? "expense" : "income"
+                  }
+                >
+                  KSh {budgetRemaining.toLocaleString()}
+                </strong>
+              </p>
+
+              {budgetRemaining < 0 && (
+                <p className="error-message">
+                  You have exceeded your monthly budget.
+                </p>
+              )}
+            </div>
+          )}
         </section>
 
         <section className="transaction-card">
