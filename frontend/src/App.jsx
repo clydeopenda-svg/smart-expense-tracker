@@ -3,6 +3,17 @@ import "./index.css";
 
 const API_URL = "http://127.0.0.1:5000/api/transactions";
 
+const categories = [
+  "Food",
+  "Transport",
+  "Bills",
+  "Shopping",
+  "Entertainment",
+  "Health",
+  "Education",
+  "Other",
+];
+
 function App() {
   const [type, setType] = useState("expense");
   const [description, setDescription] = useState("");
@@ -42,7 +53,6 @@ function App() {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-
     setErrorMessage("");
 
     if (!description.trim()) {
@@ -142,6 +152,8 @@ function App() {
 
   const balance = totalIncome - totalExpenses;
 
+  const budgetRemaining = monthlyBudget - totalExpenses;
+
   const filteredTransactions = transactions.filter((transaction) => {
     const matchesType =
       filterType === "all" || transaction.type === filterType;
@@ -153,7 +165,26 @@ function App() {
     return matchesType && matchesCategory;
   });
 
-  const budgetRemaining = monthlyBudget - totalExpenses;
+  // Calculate how much has been spent in each expense category.
+  const categoryTotals = categories.map((categoryName) => {
+    const total = transactions
+      .filter(
+        (transaction) =>
+          transaction.type === "expense" &&
+          transaction.category === categoryName
+      )
+      .reduce((sum, transaction) => sum + Number(transaction.amount), 0);
+
+    return {
+      category: categoryName,
+      total,
+    };
+  });
+
+  const highestCategoryTotal = Math.max(
+    ...categoryTotals.map((item) => item.total),
+    1
+  );
 
   return (
     <div className="app">
@@ -204,22 +235,16 @@ function App() {
           {monthlyBudget > 0 && (
             <div className="budget-summary">
               <p>
-                Budget:{" "}
-                <strong>KSh {monthlyBudget.toLocaleString()}</strong>
+                Budget: <strong>KSh {monthlyBudget.toLocaleString()}</strong>
               </p>
 
               <p>
-                Spent:{" "}
-                <strong>KSh {totalExpenses.toLocaleString()}</strong>
+                Spent: <strong>KSh {totalExpenses.toLocaleString()}</strong>
               </p>
 
               <p>
                 Remaining:{" "}
-                <strong
-                  className={
-                    budgetRemaining < 0 ? "expense" : "income"
-                  }
-                >
+                <strong className={budgetRemaining < 0 ? "expense" : "income"}>
                   KSh {budgetRemaining.toLocaleString()}
                 </strong>
               </p>
@@ -229,6 +254,36 @@ function App() {
                   You have exceeded your monthly budget.
                 </p>
               )}
+            </div>
+          )}
+        </section>
+
+        <section className="transaction-card spending-chart">
+          <h2>Spending by Category</h2>
+
+          {totalExpenses === 0 ? (
+            <p>No expense data available yet.</p>
+          ) : (
+            <div className="chart">
+              {categoryTotals.map((item) => (
+                <div className="chart-row" key={item.category}>
+                  <div className="chart-label">
+                    <span>{item.category}</span>
+                    <strong>KSh {item.total.toLocaleString()}</strong>
+                  </div>
+
+                  <div className="chart-track">
+                    <div
+                      className="chart-bar"
+                      style={{
+                        width: `${
+                          (item.total / highestCategoryTotal) * 100
+                        }%`,
+                      }}
+                    />
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </section>
@@ -345,15 +400,11 @@ function App() {
                 onChange={(event) => setFilterCategory(event.target.value)}
               >
                 <option value="all">All Categories</option>
-                <option value="Food">Food</option>
-                <option value="Transport">Transport</option>
-                <option value="Bills">Bills</option>
-                <option value="Shopping">Shopping</option>
-                <option value="Entertainment">Entertainment</option>
-                <option value="Health">Health</option>
-                <option value="Education">Education</option>
-                <option value="Salary">Salary</option>
-                <option value="Other">Other</option>
+                {categories.map((categoryName) => (
+                  <option value={categoryName} key={categoryName}>
+                    {categoryName}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
