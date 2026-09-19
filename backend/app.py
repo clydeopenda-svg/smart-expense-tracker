@@ -104,6 +104,33 @@ def get_summary():
     )
 
 
+@app.route("/api/summary/categories", methods=["GET"])
+def get_category_summary():
+    connection = get_db_connection()
+
+    categories = connection.execute(
+        """
+        SELECT category, SUM(amount) AS total
+        FROM transactions
+        WHERE type = 'expense'
+        GROUP BY category
+        ORDER BY total DESC
+        """
+    ).fetchall()
+
+    connection.close()
+
+    return jsonify(
+        [
+            {
+                "category": row["category"],
+                "total": float(row["total"]),
+            }
+            for row in categories
+        ]
+    )
+
+
 @app.route("/api/transactions", methods=["POST"])
 def add_transaction():
     data = request.get_json(silent=True) or {}
