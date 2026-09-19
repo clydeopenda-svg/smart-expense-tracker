@@ -504,44 +504,112 @@ button {
 /* Transactions */
 
 .transaction-list {
-  border-top: 1px solid #eef2f7;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
 }
 
 .modern-transaction {
   display: grid;
-  grid-template-columns: 44px minmax(0, 1fr) auto;
+  grid-template-columns: 46px minmax(0, 1fr) auto;
   align-items: center;
-  gap: 13px;
-  padding: 16px 0;
-  border-bottom: 1px solid #eef2f7;
+  gap: 14px;
+  padding: 14px;
+  border: 1px solid #eef2f7;
+  border-radius: 17px;
+  background: #fafbfc;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
 }
 
-.modern-transaction:last-child {
-  border-bottom: none;
+.modern-transaction:hover {
+  transform: translateY(-1px);
+  border-color: #e0e7ff;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+}
+
+.transaction-income {
+  background: linear-gradient(
+    90deg,
+    rgba(240, 253, 244, 0.9),
+    #fafbfc
+  );
+}
+
+.transaction-expense {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 247, 247, 0.9),
+    #fafbfc
+  );
 }
 
 .transaction-icon {
-  width: 44px;
-  height: 44px;
+  width: 46px;
+  height: 46px;
   display: grid;
   place-items: center;
   border-radius: 14px;
-  background: #f1f5f9;
-  color: #6366f1;
-  font-size: 19px;
-  font-weight: 800;
+  background: white;
+  border: 1px solid #e9edf3;
+  font-size: 17px;
+}
+
+.transaction-income .transaction-icon {
+  color: #16a34a;
+}
+
+.transaction-expense .transaction-icon {
+  color: #dc2626;
+}
+
+.transaction-details {
+  min-width: 0;
+}
+
+.transaction-title-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
 }
 
 .transaction-details h3 {
-  margin: 0 0 5px;
-  font-size: 14px;
+  margin: 0;
   color: #172033;
+  font-size: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.transaction-details p {
-  margin: 0;
+.transaction-type-badge {
+  flex: 0 0 auto;
+  padding: 4px 7px;
+  border-radius: 999px;
+  font-size: 9px;
+  font-weight: 800;
+}
+
+.income-badge {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.expense-badge {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.transaction-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
   color: #94a3b8;
-  font-size: 12px;
+  font-size: 11px;
 }
 
 .transaction-value {
@@ -561,6 +629,7 @@ button {
 
 .transaction-value strong {
   font-size: 14px;
+  white-space: nowrap;
 }
 
 .delete-button {
@@ -809,6 +878,29 @@ button {
   }
 }
 
+@media (max-width: 520px) {
+  .transaction-title-row {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .modern-transaction {
+    grid-template-columns: 42px minmax(0, 1fr);
+    gap: 11px;
+  }
+
+  .transaction-icon {
+    width: 42px;
+    height: 42px;
+  }
+
+  .transaction-value {
+    grid-column: 2;
+    align-items: flex-start;
+  }
+}
+
 @media (max-width: 480px) {
   .hero h1 {
     font-size: 30px;
@@ -841,20 +933,6 @@ button {
   }
 
   .spending-row-top {
-    align-items: flex-start;
-  }
-
-  .modern-transaction {
-    grid-template-columns: 40px minmax(0, 1fr);
-  }
-
-  .transaction-icon {
-    width: 40px;
-    height: 40px;
-  }
-
-  .transaction-value {
-    grid-column: 2;
     align-items: flex-start;
   }
 

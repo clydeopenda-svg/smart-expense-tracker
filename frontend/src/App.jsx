@@ -4,14 +4,14 @@ import "./index.css";
 const API_URL = "http://127.0.0.1:5000/api/transactions";
 
 const categories = [
-  "Food",
-  "Transport",
-  "Bills",
-  "Shopping",
-  "Entertainment",
-  "Health",
-  "Education",
-  "Other",
+  { name: "Food", icon: "🍴" },
+  { name: "Transport", icon: "🚗" },
+  { name: "Bills", icon: "⚡" },
+  { name: "Shopping", icon: "🛍️" },
+  { name: "Entertainment", icon: "🎬" },
+  { name: "Health", icon: "❤️" },
+  { name: "Education", icon: "📚" },
+  { name: "Other", icon: "•••" },
 ];
 
 function App() {
@@ -170,25 +170,35 @@ function App() {
     return matchesType && matchesCategory;
   });
 
-  const categoryTotals = categories.map((categoryName) => {
+  const categoryTotals = categories.map((categoryItem) => {
     const total = transactions
       .filter(
         (transaction) =>
           transaction.type === "expense" &&
-          transaction.category === categoryName
+          transaction.category === categoryItem.name
       )
       .reduce((sum, transaction) => sum + Number(transaction.amount), 0);
 
     return {
-      category: categoryName,
+      ...categoryItem,
       total,
     };
   });
 
-  const highestCategoryTotal = Math.max(
-    ...categoryTotals.map((item) => item.total),
-    1
-  );
+  const activeCategories = categoryTotals
+    .filter((item) => item.total > 0)
+    .sort((a, b) => b.total - a.total);
+
+  const largestCategory =
+    activeCategories.length > 0 ? activeCategories[0] : null;
+
+  const getCategoryIcon = (transactionCategory) => {
+    const categoryItem = categories.find(
+      (item) => item.name === transactionCategory
+    );
+
+    return categoryItem ? categoryItem.icon : "•••";
+  };
 
   return (
     <div className="app">
@@ -225,7 +235,9 @@ function App() {
 
             <div className="balance-pill">
               <span>{balance >= 0 ? "↗" : "↘"}</span>
-              <span>{balance >= 0 ? "Positive balance" : "Review spending"}</span>
+              <span>
+                {balance >= 0 ? "Positive balance" : "Review spending"}
+              </span>
             </div>
           </div>
 
@@ -278,13 +290,16 @@ function App() {
 
         <section className="main-grid">
           <div className="left-column">
-            <section className="dashboard-card">
+            <section className="dashboard-card spending-card">
               <div className="section-heading">
                 <div>
                   <p className="section-kicker">SPENDING</p>
                   <h2>Where your money goes</h2>
                 </div>
-                <span className="section-badge">Categories</span>
+
+                <span className="section-badge">
+                  KSh {totalExpenses.toLocaleString()}
+                </span>
               </div>
 
               {totalExpenses === 0 ? (
@@ -294,35 +309,69 @@ function App() {
                   <small>Add an expense to see your spending breakdown.</small>
                 </div>
               ) : (
-                <div className="spending-chart">
-                  {categoryTotals
-                    .filter((item) => item.total > 0)
-                    .map((item) => (
-                      <div className="spending-row" key={item.category}>
-                        <div className="spending-info">
-                          <span>{item.category}</span>
-                          <strong>
-                            KSh {item.total.toLocaleString()}
-                          </strong>
-                        </div>
-
-                        <div className="spending-track">
-                          <div
-                            className="spending-fill"
-                            style={{
-                              width: `${
-                                (item.total / highestCategoryTotal) * 100
-                              }%`,
-                            }}
-                          />
-                        </div>
+                <>
+                  {largestCategory && (
+                    <div className="spending-highlight">
+                      <div className="highlight-icon">
+                        {largestCategory.icon}
                       </div>
-                    ))}
-                </div>
+
+                      <div>
+                        <span>Highest spending category</span>
+                        <strong>{largestCategory.name}</strong>
+                      </div>
+
+                      <div className="highlight-amount">
+                        KSh {largestCategory.total.toLocaleString()}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="spending-chart">
+                    {activeCategories.map((item) => {
+                      const percentage =
+                        totalExpenses > 0
+                          ? (item.total / totalExpenses) * 100
+                          : 0;
+
+                      return (
+                        <div className="spending-row" key={item.name}>
+                          <div className="spending-row-top">
+                            <div className="spending-category">
+                              <span className="category-icon">
+                                {item.icon}
+                              </span>
+
+                              <div>
+                                <strong>{item.name}</strong>
+                                <span>
+                                  {Math.round(percentage)}% of spending
+                                </span>
+                              </div>
+                            </div>
+
+                            <strong className="spending-amount">
+                              KSh {item.total.toLocaleString()}
+                            </strong>
+                          </div>
+
+                          <div className="spending-track">
+                            <div
+                              className="spending-fill"
+                              style={{
+                                width: `${percentage}%`,
+                              }}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </>
               )}
             </section>
 
-            <section className="dashboard-card">
+            <section className="dashboard-card transactions-card">
               <div className="section-heading">
                 <div>
                   <p className="section-kicker">ACTIVITY</p>
@@ -363,12 +412,12 @@ function App() {
                   >
                     <option value="all">All categories</option>
 
-                    {categories.map((categoryName) => (
+                    {categories.map((categoryItem) => (
                       <option
-                        value={categoryName}
-                        key={categoryName}
+                        value={categoryItem.name}
+                        key={categoryItem.name}
                       >
-                        {categoryName}
+                        {categoryItem.name}
                       </option>
                     ))}
                   </select>
@@ -388,19 +437,40 @@ function App() {
               ) : (
                 <div className="transaction-list">
                   {filteredTransactions.map((transaction) => (
-                    <div
-                      className="modern-transaction"
+                    <article
+                      className={`modern-transaction ${
+                        transaction.type === "income"
+                          ? "transaction-income"
+                          : "transaction-expense"
+                      }`}
                       key={transaction.id}
                     >
                       <div className="transaction-icon">
-                        {transaction.type === "income" ? "↗" : "↘"}
+                        {getCategoryIcon(transaction.category)}
                       </div>
 
                       <div className="transaction-details">
-                        <h3>{transaction.description}</h3>
-                        <p>
-                          {transaction.category} · {transaction.date}
-                        </p>
+                        <div className="transaction-title-row">
+                          <h3>{transaction.description}</h3>
+
+                          <span
+                            className={`transaction-type-badge ${
+                              transaction.type === "income"
+                                ? "income-badge"
+                                : "expense-badge"
+                            }`}
+                          >
+                            {transaction.type === "income"
+                              ? "Income"
+                              : "Expense"}
+                          </span>
+                        </div>
+
+                        <div className="transaction-meta">
+                          <span>{transaction.category}</span>
+                          <span>•</span>
+                          <span>{transaction.date}</span>
+                        </div>
                       </div>
 
                       <div className="transaction-value">
@@ -424,7 +494,7 @@ function App() {
                           Delete
                         </button>
                       </div>
-                    </div>
+                    </article>
                   ))}
                 </div>
               )}
@@ -502,13 +572,17 @@ function App() {
               <h2>
                 {totalExpenses === 0
                   ? "Start tracking"
-                  : "Keep an eye on your spending"}
+                  : largestCategory
+                    ? `${largestCategory.name} is your biggest expense`
+                    : "Keep an eye on your spending"}
               </h2>
 
               <p>
                 {totalExpenses === 0
                   ? "Add your first expense to start understanding your spending habits."
-                  : "Your dashboard updates automatically whenever you add or remove a transaction."}
+                  : largestCategory
+                    ? `You have spent KSh ${largestCategory.total.toLocaleString()} on ${largestCategory.name.toLowerCase()} so far.`
+                    : "Your dashboard updates automatically whenever you add or remove a transaction."}
               </p>
             </section>
           </aside>
@@ -580,15 +654,16 @@ function App() {
                   setCategory(event.target.value)
                 }
               >
-                <option value="Food">Food</option>
-                <option value="Transport">Transport</option>
-                <option value="Bills">Bills</option>
-                <option value="Shopping">Shopping</option>
-                <option value="Entertainment">Entertainment</option>
-                <option value="Health">Health</option>
-                <option value="Education">Education</option>
+                {categories.map((categoryItem) => (
+                  <option
+                    value={categoryItem.name}
+                    key={categoryItem.name}
+                  >
+                    {categoryItem.name}
+                  </option>
+                ))}
+
                 <option value="Salary">Salary</option>
-                <option value="Other">Other</option>
               </select>
             </div>
 
