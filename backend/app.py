@@ -37,9 +37,11 @@ def initialize_database():
 
 @app.route("/")
 def home():
-    return jsonify({
-        "message": "Smart Expense Tracker API is running"
-    })
+    return jsonify(
+        {
+            "message": "Smart Expense Tracker API is running"
+        }
+    )
 
 
 @app.route("/api/transactions", methods=["GET"])
@@ -67,39 +69,72 @@ def add_transaction():
     description = str(data.get("description", "")).strip()
     amount = data.get("amount")
     category = str(data.get("category", "")).strip()
-    date = data.get("date")
+    date = str(data.get("date", "")).strip()
 
     if transaction_type not in ["income", "expense"]:
-        return jsonify({
-            "error": "Transaction type must be income or expense"
-        }), 400
+        return jsonify(
+            {
+                "error": "Transaction type must be income or expense"
+            }
+        ), 400
 
     if not description:
-        return jsonify({
-            "error": "Description is required"
-        }), 400
+        return jsonify(
+            {
+                "error": "Description is required"
+            }
+        ), 400
+
+    if len(description) > 100:
+        return jsonify(
+            {
+                "error": "Description must be 100 characters or less"
+            }
+        ), 400
 
     try:
         amount = float(amount)
     except (TypeError, ValueError):
-        return jsonify({
-            "error": "Amount must be a valid number"
-        }), 400
+        return jsonify(
+            {
+                "error": "Amount must be a valid number"
+            }
+        ), 400
 
     if amount <= 0:
-        return jsonify({
-            "error": "Amount must be greater than zero"
-        }), 400
+        return jsonify(
+            {
+                "error": "Amount must be greater than zero"
+            }
+        ), 400
+
+    if amount > 100000000:
+        return jsonify(
+            {
+                "error": "Amount is too large"
+            }
+        ), 400
 
     if not category:
-        return jsonify({
-            "error": "Category is required"
-        }), 400
+        return jsonify(
+            {
+                "error": "Category is required"
+            }
+        ), 400
+
+    if len(category) > 50:
+        return jsonify(
+            {
+                "error": "Category must be 50 characters or less"
+            }
+        ), 400
 
     if not date:
-        return jsonify({
-            "error": "Date is required"
-        }), 400
+        return jsonify(
+            {
+                "error": "Date is required"
+            }
+        ), 400
 
     connection = get_db_connection()
 
@@ -150,9 +185,11 @@ def delete_transaction(transaction_id):
     if transaction is None:
         connection.close()
 
-        return jsonify({
-            "error": "Transaction not found"
-        }), 404
+        return jsonify(
+            {
+                "error": "Transaction not found"
+            }
+        ), 404
 
     connection.execute(
         """
@@ -165,9 +202,11 @@ def delete_transaction(transaction_id):
     connection.commit()
     connection.close()
 
-    return jsonify({
-        "message": "Transaction deleted successfully"
-    })
+    return jsonify(
+        {
+            "message": "Transaction deleted successfully"
+        }
+    )
 
 
 if __name__ == "__main__":
