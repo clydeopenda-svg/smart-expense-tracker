@@ -380,6 +380,160 @@ a {
   font-size: 18px;
   letter-spacing: -0.4px;
 }
+/* ---------------- Financial summary ---------------- */
+
+.financial-summary-card {
+  margin: 14px 0;
+
+  padding: 28px;
+
+  border: 1px solid #e5e6ea;
+  border-radius: 25px;
+
+  background: #ffffff;
+
+  box-shadow: 0 10px 35px rgba(28, 30, 36, 0.035);
+}
+
+.financial-summary-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 20px;
+
+  margin-bottom: 24px;
+}
+
+.financial-summary-header h3 {
+  margin: 0;
+
+  font-size: 20px;
+  letter-spacing: -0.7px;
+}
+
+.summary-period {
+  padding: 8px 11px;
+
+  border-radius: 10px;
+
+  background: #f3f3f5;
+
+  color: #858992;
+
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.2fr;
+  gap: 12px;
+}
+
+.summary-item {
+  min-height: 125px;
+
+  padding: 18px;
+
+  border: 1px solid #ececef;
+  border-radius: 17px;
+
+  background: #fafafa;
+}
+
+.summary-item-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  margin-bottom: 12px;
+
+  color: #858a94;
+
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.summary-dot {
+  width: 7px;
+  height: 7px;
+
+  border-radius: 50%;
+}
+
+.income-dot {
+  background: #65b57f;
+}
+
+.expense-dot {
+  background: #d47b87;
+}
+
+.balance-dot {
+  background: #9186e8;
+}
+
+.summary-item > strong {
+  display: block;
+
+  font-size: 20px;
+  letter-spacing: -0.7px;
+}
+
+.summary-bar {
+  width: 100%;
+  height: 5px;
+
+  margin-top: 17px;
+
+  overflow: hidden;
+
+  border-radius: 100px;
+
+  background: #e9eaed;
+}
+
+.summary-bar-fill {
+  height: 100%;
+
+  border-radius: inherit;
+
+  transition: width 0.5s ease;
+}
+
+.income-summary-fill {
+  background: #79bd91;
+}
+
+.expense-summary-fill {
+  background: #d9939d;
+}
+
+.summary-balance {
+  background:
+    radial-gradient(
+      circle at 100% 0%,
+      rgba(220, 216, 255, 0.75),
+      transparent 45%
+    ),
+    #f5f4ff;
+}
+
+.summary-balance > strong {
+  color: #6259a4;
+}
+
+.summary-balance p {
+  max-width: 280px;
+
+  margin: 10px 0 0;
+
+  color: #85829a;
+
+  font-size: 10px;
+  line-height: 1.5;
+}
 
 /* ---------------- Dashboard columns ---------------- */
 
@@ -1009,6 +1163,18 @@ input:focus {
   .top-navigation,
   .dashboard-container {
     width: min(100% - 28px, 1380px);
+      .financial-summary-card {
+    padding: 21px;
+  }
+
+  .financial-summary-header {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .summary-grid {
+    grid-template-columns: 1fr;
+  }
   }
 
   .top-navigation {

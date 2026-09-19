@@ -289,7 +289,91 @@ function App() {
           </div>
         </section>
 
-        <section className="statistics-grid">
+<section className="financial-summary-card">
+  <div className="financial-summary-header">
+    <div>
+      <p className="section-kicker">FINANCIAL SUMMARY</p>
+      <h3>Your money at a glance</h3>
+    </div>
+
+    <div className="summary-period">
+      Current overview
+    </div>
+  </div>
+
+  <div className="summary-grid">
+    <div className="summary-item">
+      <div className="summary-item-header">
+        <span>Income</span>
+        <span className="summary-dot income-dot"></span>
+      </div>
+
+      <strong className="income-text">
+        {formatCurrency(totalIncome)}
+      </strong>
+
+      <div className="summary-bar">
+        <div
+          className="summary-bar-fill income-summary-fill"
+          style={{
+            width:
+              totalIncome > 0
+                ? `${Math.min(
+                    (totalIncome /
+                      Math.max(totalIncome, totalExpenses, 1)) *
+                      100,
+                    100
+                  )}%`
+                : "0%",
+          }}
+        />
+      </div>
+    </div>
+
+    <div className="summary-item">
+      <div className="summary-item-header">
+        <span>Expenses</span>
+        <span className="summary-dot expense-dot"></span>
+      </div>
+
+      <strong className="expense-text">
+        {formatCurrency(totalExpenses)}
+      </strong>
+
+      <div className="summary-bar">
+        <div
+          className="summary-bar-fill expense-summary-fill"
+          style={{
+            width:
+              totalExpenses > 0
+                ? `${Math.min(
+                    (totalExpenses /
+                      Math.max(totalIncome, totalExpenses, 1)) *
+                      100,
+                    100
+                  )}%`
+                : "0%",
+          }}
+        />
+      </div>
+    </div>
+
+    <div className="summary-item summary-balance">
+      <div className="summary-item-header">
+        <span>Net position</span>
+        <span className="summary-dot balance-dot"></span>
+      </div>
+
+      <strong>{formatCurrency(balance)}</strong>
+
+      <p>
+        {balance >= 0
+          ? "Your income is currently higher than your expenses."
+          : "Your expenses are currently higher than your income."}
+      </p>
+    </div>
+  </div>
+</section>
           <article className="stat-card">
             <div className="stat-icon income-icon">↗</div>
             <div>
