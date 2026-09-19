@@ -211,13 +211,33 @@ function App() {
 
       <main className="dashboard">
         <section className="balance-card">
-          <div className="balance-content">
+          <div className="balance-top">
             <div>
-              <p className="card-label">CURRENT BALANCE</p>
-              <h2>KSh {balance.toLocaleString()}</h2>
-              <p className="balance-note">
-                Based on your recorded income and expenses
-              </p>
+              <p className="card-label">TOTAL BALANCE</p>
+              <p className="balance-caption">Available funds</p>
+            </div>
+
+            <div className="balance-menu">•••</div>
+          </div>
+
+          <div className="balance-main">
+            <h2>KSh {balance.toLocaleString()}</h2>
+
+            <div className="balance-pill">
+              <span>{balance >= 0 ? "↗" : "↘"}</span>
+              <span>{balance >= 0 ? "Positive balance" : "Review spending"}</span>
+            </div>
+          </div>
+
+          <div className="balance-footer">
+            <div>
+              <span>Income</span>
+              <strong>+ KSh {totalIncome.toLocaleString()}</strong>
+            </div>
+
+            <div>
+              <span>Expenses</span>
+              <strong>- KSh {totalExpenses.toLocaleString()}</strong>
             </div>
 
             <div className="balance-symbol">KES</div>
