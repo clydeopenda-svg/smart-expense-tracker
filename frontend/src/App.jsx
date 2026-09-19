@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 
-const API_URL = "http://127.0.0.1:5000/api/transactions";
+const API_BASE_URL = "http://127.0.0.1:5000/api";
+const API_URL = `${API_BASE_URL}/transactions`;
+const BUDGET_URL = `${API_BASE_URL}/budget`;
 
 const categories = [
   { name: "Food", icon: "🍴", className: "category-food" },
@@ -31,30 +33,47 @@ function App() {
   const [filterType, setFilterType] = useState("all");
   const [filterCategory, setFilterCategory] = useState("all");
 
-  const [monthlyBudget, setMonthlyBudget] = useState(50000);
+  const [monthlyBudget, setMonthlyBudget] = useState(0);
+  const [budgetInput, setBudgetInput] = useState("");
+  const [savingBudget, setSavingBudget] = useState(false);
 
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [budgetError, setBudgetError] = useState("");
 
   useEffect(() => {
-    loadTransactions();
+    loadDashboardData();
   }, []);
 
-  async function loadTransactions() {
+  async function loadDashboardData() {
     try {
       setLoading(true);
+      setError("");
 
-      const response = await fetch(API_URL);
+      const [transactionsResponse, budgetResponse] =
+        await Promise.all([
+          fetch(API_URL),
+          fetch(BUDGET_URL),
+        ]);
 
-      if (!response.ok) {
+      if (!transactionsResponse.ok) {
         throw new Error("Failed to load transactions");
       }
 
-      const data = await response.json();
+      if (!budgetResponse.ok) {
+        throw new Error("Failed to load budget");
+      }
 
-      setTransactions(data);
-      setError("");
+      const transactionsData = await transactionsResponse.json();
+      const budgetData = await budgetResponse.json();
+
+      setTransactions(transactionsData);
+
+      const savedBudget = Number(budgetData.amount) || 0;
+
+      setMonthlyBudget(savedBudget);
+      setBudgetInput(savedBudget > 0 ? String(savedBudget) : "");
     } catch (err) {
       setError("Could not connect to the backend.");
     } finally {
@@ -142,6 +161,48 @@ function App() {
       );
     } catch (err) {
       setError(err.message);
+    }
+  }
+
+  async function handleBudgetSave(event) {
+    event.preventDefault();
+    setBudgetError("");
+
+    const newBudget = Number(budgetInput);
+
+    if (!Number.isFinite(newBudget) || newBudget < 0) {
+      setBudgetError("Please enter a valid budget amount.");
+      return;
+    }
+
+    try {
+      setSavingBudget(true);
+
+      const response = await fetch(BUDGET_URL, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          amount: newBudget,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to update budget");
+      }
+
+      const savedBudget = Number(data.amount) || 0;
+
+      setMonthlyBudget(savedBudget);
+      setBudgetInput(String(savedBudget));
+      setBudgetError("");
+    } catch (err) {
+      setBudgetError(err.message);
+    } finally {
+      setSavingBudget(false);
     }
   }
 
@@ -379,11 +440,7 @@ function App() {
                       totalIncome > 0
                         ? `${Math.min(
                             (totalIncome /
-                              Math.max(
-                                totalIncome,
-                                totalExpenses,
-                                1
-                              )) *
+                              Math.max(totalIncome, totalExpenses, 1)) *
                               100,
                             100
                           )}%`
@@ -411,11 +468,7 @@ function App() {
                       totalExpenses > 0
                         ? `${Math.min(
                             (totalExpenses /
-                              Math.max(
-                                totalIncome,
-                                totalExpenses,
-                                1
-                              )) *
+                              Math.max(totalIncome, totalExpenses, 1)) *
                               100,
                             100
                           )}%`
@@ -470,8 +523,7 @@ function App() {
                   <h4>No spending data yet</h4>
 
                   <p>
-                    Add an expense to start seeing your spending
-                    breakdown.
+                    Add an expense to start seeing your spending breakdown.
                   </p>
                 </div>
               ) : (
@@ -496,10 +548,7 @@ function App() {
                           </div>
 
                           <div className="category-amount">
-                            <strong>
-                              {formatCurrency(item.total)}
-                            </strong>
-
+                            <strong>{formatCurrency(item.total)}</strong>
                             <span>{Math.round(percentage)}%</span>
                           </div>
                         </div>
@@ -537,9 +586,7 @@ function App() {
               <div className="filter-bar">
                 <select
                   value={filterType}
-                  onChange={(event) =>
-                    setFilterType(event.target.value)
-                  }
+                  onChange={(event) => setFilterType(event.target.value)}
                 >
                   <option value="all">All types</option>
                   <option value="income">Income</option>
@@ -573,8 +620,7 @@ function App() {
                   <h4>No transactions found</h4>
 
                   <p>
-                    Try changing your filters or add a new
-                    transaction.
+                    Try changing your filters or add a new transaction.
                   </p>
                 </div>
               ) : (
@@ -631,19 +677,13 @@ function App() {
                                 : "expense-text"
                             }
                           >
-                            {transaction.type === "income"
-                              ? "+"
-                              : "-"}
-                            {formatCurrency(
-                              Number(transaction.amount)
-                            )}
+                            {transaction.type === "income" ? "+" : "-"}
+                            {formatCurrency(Number(transaction.amount))}
                           </strong>
 
                           <button
                             className="delete-button"
-                            onClick={() =>
-                              handleDelete(transaction.id)
-                            }
+                            onClick={() => handleDelete(transaction.id)}
                           >
                             Delete
                           </button>
@@ -700,18 +740,37 @@ function App() {
                 </div>
               </div>
 
-              <label className="budget-input-label">
-                Adjust monthly budget
+              <form
+                className="budget-form"
+                onSubmit={handleBudgetSave}
+              >
+                <label className="budget-input-label">
+                  Adjust monthly budget
 
-                <input
-                  type="number"
-                  min="0"
-                  value={monthlyBudget}
-                  onChange={(event) =>
-                    setMonthlyBudget(Number(event.target.value))
-                  }
-                />
-              </label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="1"
+                    placeholder="Enter budget"
+                    value={budgetInput}
+                    onChange={(event) =>
+                      setBudgetInput(event.target.value)
+                    }
+                  />
+                </label>
+
+                <button
+                  className="submit-button budget-save-button"
+                  type="submit"
+                  disabled={savingBudget}
+                >
+                  {savingBudget ? "Saving..." : "Save budget"}
+                </button>
+              </form>
+
+              {budgetError && (
+                <div className="error-message">{budgetError}</div>
+              )}
             </section>
 
             <section className="dashboard-card insight-card" id="insights">

@@ -382,3 +382,33 @@ def test_monthly_summary(client):
 
     assert data[1]["month"] == "2026-01"
     assert data[1]["total"] == 1500
+
+def test_get_budget(client):
+    response = client.get("/api/budget")
+
+    assert response.status_code == 200
+
+    data = response.get_json()
+
+    assert data["amount"] == 0
+
+
+def test_update_budget(client):
+    response = client.put(
+        "/api/budget",
+        json={
+            "amount": 50000
+        },
+    )
+
+    assert response.status_code == 200
+
+    data = response.get_json()
+
+    assert data["amount"] == 50000
+    assert data["message"] == "Budget updated successfully"
+
+    get_response = client.get("/api/budget")
+
+    assert get_response.status_code == 200
+    assert get_response.get_json()["amount"] == 50000
