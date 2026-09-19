@@ -1295,3 +1295,170 @@ input:focus {
     flex-wrap: wrap;
   }
 }
+/* ---------------- Mobile dashboard improvements ---------------- */
+
+@media (max-width: 700px) {
+  .top-navigation {
+    gap: 12px;
+  }
+
+  .brand-area {
+    flex: 1;
+  }
+
+  .brand-mark {
+    width: 38px;
+    height: 38px;
+  }
+
+  .brand-area h1 {
+    font-size: 15px;
+  }
+
+  .profile-avatar {
+    width: 36px;
+    height: 36px;
+  }
+
+  .dashboard-container {
+    padding-bottom: 40px;
+  }
+
+  .hero-description {
+    max-width: 330px;
+    line-height: 1.5;
+  }
+
+  .balance-card {
+    overflow: hidden;
+  }
+
+  .balance-footer {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .stat-card {
+    min-height: 96px;
+  }
+
+  .stat-icon {
+    width: 36px;
+    height: 36px;
+  }
+
+  .stat-card strong {
+    font-size: 15px;
+  }
+
+  .financial-summary-card {
+    overflow: hidden;
+  }
+
+  .summary-item {
+    min-height: 110px;
+  }
+
+  .category-row-top {
+    gap: 10px;
+  }
+
+  .category-amount {
+    flex-shrink: 0;
+  }
+
+  .modern-transaction {
+    padding: 13px;
+  }
+
+  .transaction-information {
+    overflow: hidden;
+  }
+
+  .transaction-title-row h4 {
+    max-width: 100%;
+  }
+
+  .transaction-value {
+    padding-top: 2px;
+  }
+
+  .delete-button {
+    padding: 5px 0;
+  }
+
+  .budget-summary {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .insight-card h3 {
+    font-size: 20px;
+  }
+
+  .submit-button {
+    min-height: 46px;
+  }
+}
+
+@media (max-width: 430px) {
+  .dashboard-hero h2 {
+    font-size: 38px;
+  }
+
+  .balance-card h3 {
+    font-size: 36px;
+  }
+
+  .balance-footer {
+    grid-template-columns: 1fr;
+  }
+
+  .statistics-grid {
+    gap: 9px;
+  }
+
+  .stat-card {
+    min-height: 88px;
+    padding: 13px;
+    gap: 9px;
+  }
+
+  .stat-card span {
+    font-size: 9px;
+  }
+
+  .stat-card strong {
+    font-size: 13px;
+  }
+
+  .category-name strong {
+    font-size: 11px;
+  }
+
+  .category-amount strong {
+    font-size: 11px;
+  }
+
+  .modern-transaction {
+    grid-template-columns: 36px minmax(0, 1fr);
+    gap: 10px;
+  }
+
+  .transaction-icon {
+    width: 36px;
+    height: 36px;
+    font-size: 14px;
+  }
+
+  .transaction-title-row h4 {
+    font-size: 12px;
+  }
+
+  .transaction-value {
+    grid-column: 2;
+  }
+
+  .transaction-value strong {
+    font-size: 12px;
+  }
+}
