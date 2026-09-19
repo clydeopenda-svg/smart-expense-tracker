@@ -154,6 +154,11 @@ function App() {
 
   const budgetRemaining = monthlyBudget - totalExpenses;
 
+  const budgetPercentage =
+    monthlyBudget > 0
+      ? Math.min((totalExpenses / monthlyBudget) * 100, 100)
+      : 0;
+
   const filteredTransactions = transactions.filter((transaction) => {
     const matchesType =
       filterType === "all" || transaction.type === filterType;
@@ -165,7 +170,6 @@ function App() {
     return matchesType && matchesCategory;
   });
 
-  // Calculate how much has been spent in each expense category.
   const categoryTotals = categories.map((categoryName) => {
     const total = transactions
       .filter(
@@ -188,116 +192,323 @@ function App() {
 
   return (
     <div className="app">
-      <header className="app-header">
-        <h1>Smart Expense Tracker</h1>
-        <p>Track your income and expenses in one place.</p>
+      <header className="hero">
+        <div className="hero-content">
+          <div>
+            <p className="eyebrow">PERSONAL FINANCE</p>
+            <h1>Smart Expense Tracker</h1>
+            <p className="hero-description">
+              Understand your money at a glance.
+            </p>
+          </div>
+
+          <div className="hero-date">
+            <span>Dashboard</span>
+            <strong>{new Date().toLocaleDateString()}</strong>
+          </div>
+        </div>
       </header>
 
-      <main className="container">
-        <section className="summary-grid">
-          <div className="summary-card">
-            <p>Current Balance</p>
-            <h2>KSh {balance.toLocaleString()}</h2>
-          </div>
+      <main className="dashboard">
+        <section className="balance-card">
+          <div className="balance-content">
+            <div>
+              <p className="card-label">CURRENT BALANCE</p>
+              <h2>KSh {balance.toLocaleString()}</h2>
+              <p className="balance-note">
+                Based on your recorded income and expenses
+              </p>
+            </div>
 
-          <div className="summary-card">
-            <p>Total Income</p>
-            <h2>KSh {totalIncome.toLocaleString()}</h2>
-          </div>
-
-          <div className="summary-card">
-            <p>Total Expenses</p>
-            <h2>KSh {totalExpenses.toLocaleString()}</h2>
+            <div className="balance-symbol">KES</div>
           </div>
         </section>
 
-        <section className="transaction-card budget-card">
-          <h2>Monthly Budget</h2>
+        <section className="stats-grid">
+          <div className="stat-card income-card">
+            <div className="stat-icon">↗</div>
+            <p>Income</p>
+            <h3>KSh {totalIncome.toLocaleString()}</h3>
+            <span>Total money received</span>
+          </div>
 
-          <form onSubmit={handleBudgetSubmit}>
-            <div className="form-group">
-              <label htmlFor="budget">Set Monthly Budget</label>
+          <div className="stat-card expense-card">
+            <div className="stat-icon">↘</div>
+            <p>Expenses</p>
+            <h3>KSh {totalExpenses.toLocaleString()}</h3>
+            <span>Total money spent</span>
+          </div>
 
-              <input
-                id="budget"
-                type="number"
-                min="1"
-                step="0.01"
-                placeholder="e.g. 30000"
-                value={budgetInput}
-                onChange={(event) => setBudgetInput(event.target.value)}
-              />
-            </div>
+          <div className="stat-card budget-stat-card">
+            <div className="stat-icon">◎</div>
+            <p>Budget Remaining</p>
+            <h3>
+              KSh{" "}
+              {monthlyBudget > 0
+                ? budgetRemaining.toLocaleString()
+                : "—"}
+            </h3>
+            <span>
+              {monthlyBudget > 0
+                ? "Available this month"
+                : "No budget set"}
+            </span>
+          </div>
+        </section>
 
-            <button type="submit">Save Budget</button>
-          </form>
+        <section className="main-grid">
+          <div className="left-column">
+            <section className="dashboard-card">
+              <div className="section-heading">
+                <div>
+                  <p className="section-kicker">SPENDING</p>
+                  <h2>Where your money goes</h2>
+                </div>
+                <span className="section-badge">Categories</span>
+              </div>
 
-          {monthlyBudget > 0 && (
-            <div className="budget-summary">
-              <p>
-                Budget: <strong>KSh {monthlyBudget.toLocaleString()}</strong>
-              </p>
+              {totalExpenses === 0 ? (
+                <div className="empty-state">
+                  <span>◎</span>
+                  <p>No expense data available yet.</p>
+                  <small>Add an expense to see your spending breakdown.</small>
+                </div>
+              ) : (
+                <div className="spending-chart">
+                  {categoryTotals
+                    .filter((item) => item.total > 0)
+                    .map((item) => (
+                      <div className="spending-row" key={item.category}>
+                        <div className="spending-info">
+                          <span>{item.category}</span>
+                          <strong>
+                            KSh {item.total.toLocaleString()}
+                          </strong>
+                        </div>
 
-              <p>
-                Spent: <strong>KSh {totalExpenses.toLocaleString()}</strong>
-              </p>
-
-              <p>
-                Remaining:{" "}
-                <strong className={budgetRemaining < 0 ? "expense" : "income"}>
-                  KSh {budgetRemaining.toLocaleString()}
-                </strong>
-              </p>
-
-              {budgetRemaining < 0 && (
-                <p className="error-message">
-                  You have exceeded your monthly budget.
-                </p>
+                        <div className="spending-track">
+                          <div
+                            className="spending-fill"
+                            style={{
+                              width: `${
+                                (item.total / highestCategoryTotal) * 100
+                              }%`,
+                            }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                </div>
               )}
-            </div>
-          )}
-        </section>
+            </section>
 
-        <section className="transaction-card spending-chart">
-          <h2>Spending by Category</h2>
+            <section className="dashboard-card">
+              <div className="section-heading">
+                <div>
+                  <p className="section-kicker">ACTIVITY</p>
+                  <h2>Recent transactions</h2>
+                </div>
 
-          {totalExpenses === 0 ? (
-            <p>No expense data available yet.</p>
-          ) : (
-            <div className="chart">
-              {categoryTotals.map((item) => (
-                <div className="chart-row" key={item.category}>
-                  <div className="chart-label">
-                    <span>{item.category}</span>
-                    <strong>KSh {item.total.toLocaleString()}</strong>
+                <span className="transaction-count">
+                  {filteredTransactions.length} items
+                </span>
+              </div>
+
+              <div className="filter-grid">
+                <div className="form-group">
+                  <label htmlFor="filter-type">Type</label>
+
+                  <select
+                    id="filter-type"
+                    value={filterType}
+                    onChange={(event) =>
+                      setFilterType(event.target.value)
+                    }
+                  >
+                    <option value="all">All transactions</option>
+                    <option value="income">Income</option>
+                    <option value="expense">Expenses</option>
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="filter-category">Category</label>
+
+                  <select
+                    id="filter-category"
+                    value={filterCategory}
+                    onChange={(event) =>
+                      setFilterCategory(event.target.value)
+                    }
+                  >
+                    <option value="all">All categories</option>
+
+                    {categories.map((categoryName) => (
+                      <option
+                        value={categoryName}
+                        key={categoryName}
+                      >
+                        {categoryName}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {loading ? (
+                <p className="status-message">
+                  Loading transactions...
+                </p>
+              ) : filteredTransactions.length === 0 ? (
+                <div className="empty-state">
+                  <span>○</span>
+                  <p>No matching transactions.</p>
+                  <small>Try changing your filters.</small>
+                </div>
+              ) : (
+                <div className="transaction-list">
+                  {filteredTransactions.map((transaction) => (
+                    <div
+                      className="modern-transaction"
+                      key={transaction.id}
+                    >
+                      <div className="transaction-icon">
+                        {transaction.type === "income" ? "↗" : "↘"}
+                      </div>
+
+                      <div className="transaction-details">
+                        <h3>{transaction.description}</h3>
+                        <p>
+                          {transaction.category} · {transaction.date}
+                        </p>
+                      </div>
+
+                      <div className="transaction-value">
+                        <strong
+                          className={
+                            transaction.type === "income"
+                              ? "income"
+                              : "expense"
+                          }
+                        >
+                          {transaction.type === "income" ? "+" : "-"} KSh{" "}
+                          {Number(transaction.amount).toLocaleString()}
+                        </strong>
+
+                        <button
+                          className="delete-button"
+                          onClick={() =>
+                            handleDelete(transaction.id)
+                          }
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
+          </div>
+
+          <aside className="right-column">
+            <section className="dashboard-card budget-panel">
+              <div className="section-heading">
+                <div>
+                  <p className="section-kicker">MONTHLY PLAN</p>
+                  <h2>Budget</h2>
+                </div>
+              </div>
+
+              <form onSubmit={handleBudgetSubmit}>
+                <div className="form-group">
+                  <label htmlFor="budget">Monthly budget</label>
+
+                  <input
+                    id="budget"
+                    type="number"
+                    min="1"
+                    step="0.01"
+                    placeholder="e.g. 30000"
+                    value={budgetInput}
+                    onChange={(event) =>
+                      setBudgetInput(event.target.value)
+                    }
+                  />
+                </div>
+
+                <button type="submit" className="primary-button">
+                  Save budget
+                </button>
+              </form>
+
+              {monthlyBudget > 0 && (
+                <div className="budget-progress">
+                  <div className="budget-progress-heading">
+                    <span>Spent</span>
+                    <strong>{Math.round(budgetPercentage)}%</strong>
                   </div>
 
-                  <div className="chart-track">
+                  <div className="budget-track">
                     <div
-                      className="chart-bar"
+                      className="budget-fill"
                       style={{
-                        width: `${
-                          (item.total / highestCategoryTotal) * 100
-                        }%`,
+                        width: `${budgetPercentage}%`,
                       }}
                     />
                   </div>
+
+                  <div className="budget-numbers">
+                    <span>
+                      KSh {totalExpenses.toLocaleString()} spent
+                    </span>
+                    <span>
+                      KSh {monthlyBudget.toLocaleString()} limit
+                    </span>
+                  </div>
+
+                  {budgetRemaining < 0 && (
+                    <p className="budget-warning">
+                      You have exceeded your monthly budget.
+                    </p>
+                  )}
                 </div>
-              ))}
-            </div>
-          )}
+              )}
+            </section>
+
+            <section className="dashboard-card quick-insight">
+              <p className="section-kicker">QUICK INSIGHT</p>
+
+              <h2>
+                {totalExpenses === 0
+                  ? "Start tracking"
+                  : "Keep an eye on your spending"}
+              </h2>
+
+              <p>
+                {totalExpenses === 0
+                  ? "Add your first expense to start understanding your spending habits."
+                  : "Your dashboard updates automatically whenever you add or remove a transaction."}
+              </p>
+            </section>
+          </aside>
         </section>
 
-        <section className="transaction-card">
-          <h2>Add Transaction</h2>
+        <section className="dashboard-card add-transaction-card">
+          <div className="section-heading">
+            <div>
+              <p className="section-kicker">NEW ACTIVITY</p>
+              <h2>Add a transaction</h2>
+            </div>
+          </div>
 
           {errorMessage && (
             <p className="error-message">{errorMessage}</p>
           )}
 
-          <form onSubmit={handleSubmit}>
+          <form className="transaction-form" onSubmit={handleSubmit}>
             <div className="form-group">
-              <label htmlFor="type">Transaction Type</label>
+              <label htmlFor="type">Type</label>
 
               <select
                 id="type"
@@ -315,9 +526,11 @@ function App() {
               <input
                 id="description"
                 type="text"
-                placeholder="e.g. Lunch"
+                placeholder="e.g. Groceries"
                 value={description}
-                onChange={(event) => setDescription(event.target.value)}
+                onChange={(event) =>
+                  setDescription(event.target.value)
+                }
                 required
               />
             </div>
@@ -328,9 +541,9 @@ function App() {
               <input
                 id="amount"
                 type="number"
-                placeholder="e.g. 500"
                 min="0.01"
                 step="0.01"
+                placeholder="e.g. 1500"
                 value={amount}
                 onChange={(event) => setAmount(event.target.value)}
                 required
@@ -343,7 +556,9 @@ function App() {
               <select
                 id="category"
                 value={category}
-                onChange={(event) => setCategory(event.target.value)}
+                onChange={(event) =>
+                  setCategory(event.target.value)
+                }
               >
                 <option value="Food">Food</option>
                 <option value="Transport">Transport</option>
@@ -369,80 +584,10 @@ function App() {
               />
             </div>
 
-            <button type="submit">Add Transaction</button>
+            <button type="submit" className="primary-button">
+              Add transaction
+            </button>
           </form>
-        </section>
-
-        <section className="transaction-card transaction-list">
-          <h2>Recent Transactions</h2>
-
-          <div className="filter-grid">
-            <div className="form-group">
-              <label htmlFor="filter-type">Type</label>
-
-              <select
-                id="filter-type"
-                value={filterType}
-                onChange={(event) => setFilterType(event.target.value)}
-              >
-                <option value="all">All</option>
-                <option value="income">Income</option>
-                <option value="expense">Expenses</option>
-              </select>
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="filter-category">Category</label>
-
-              <select
-                id="filter-category"
-                value={filterCategory}
-                onChange={(event) => setFilterCategory(event.target.value)}
-              >
-                <option value="all">All Categories</option>
-                {categories.map((categoryName) => (
-                  <option value={categoryName} key={categoryName}>
-                    {categoryName}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          {loading ? (
-            <p>Loading transactions...</p>
-          ) : filteredTransactions.length === 0 ? (
-            <p>No matching transactions found.</p>
-          ) : (
-            filteredTransactions.map((transaction) => (
-              <div className="transaction-item" key={transaction.id}>
-                <div>
-                  <h3>{transaction.description}</h3>
-                  <p>
-                    {transaction.category} • {transaction.date}
-                  </p>
-                </div>
-
-                <div className="transaction-actions">
-                  <strong
-                    className={
-                      transaction.type === "income" ? "income" : "expense"
-                    }
-                  >
-                    {transaction.type === "income" ? "+" : "-"} KSh{" "}
-                    {Number(transaction.amount).toLocaleString()}
-                  </strong>
-
-                  <button
-                    className="delete-button"
-                    onClick={() => handleDelete(transaction.id)}
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-            ))
-          )}
         </section>
       </main>
     </div>
