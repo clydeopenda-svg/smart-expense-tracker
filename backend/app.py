@@ -61,6 +61,49 @@ def get_transactions():
     return jsonify([dict(transaction) for transaction in transactions])
 
 
+@app.route("/api/summary", methods=["GET"])
+def get_summary():
+    connection = get_db_connection()
+
+    income_result = connection.execute(
+        """
+        SELECT COALESCE(SUM(amount), 0)
+        FROM transactions
+        WHERE type = 'income'
+        """
+    ).fetchone()
+
+    expense_result = connection.execute(
+        """
+        SELECT COALESCE(SUM(amount), 0)
+        FROM transactions
+        WHERE type = 'expense'
+        """
+    ).fetchone()
+
+    transaction_count = connection.execute(
+        """
+        SELECT COUNT(*)
+        FROM transactions
+        """
+    ).fetchone()
+
+    connection.close()
+
+    total_income = float(income_result[0])
+    total_expenses = float(expense_result[0])
+    balance = total_income - total_expenses
+
+    return jsonify(
+        {
+            "total_income": total_income,
+            "total_expenses": total_expenses,
+            "balance": balance,
+            "transaction_count": transaction_count[0],
+        }
+    )
+
+
 @app.route("/api/transactions", methods=["POST"])
 def add_transaction():
     data = request.get_json(silent=True) or {}
