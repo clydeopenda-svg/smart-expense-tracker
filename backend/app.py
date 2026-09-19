@@ -35,27 +35,50 @@ def initialize_database():
     connection.close()
 
 
+initialize_database()
+
+
 @app.route("/")
 def home():
-    return jsonify(
-        {
-            "message": "Smart Expense Tracker API is running"
-        }
-    )
+    return jsonify({"message": "Smart Expense Tracker API is running"})
 
 
 @app.route("/api/transactions", methods=["GET"])
 def get_transactions():
-    connection = get_db_connection()
+    transaction_type = request.args.get("type")
+    category = request.args.get("category")
+    start_date = request.args.get("start_date")
+    end_date = request.args.get("end_date")
 
-    transactions = connection.execute(
-        """
+    query = """
         SELECT id, type, description, amount, category, date
         FROM transactions
-        ORDER BY id DESC
-        """
-    ).fetchall()
+        WHERE 1 = 1
+    """
+    parameters = []
 
+    if transaction_type:
+        if transaction_type not in ["income", "expense"]:
+            return jsonify({"error": "Type must be income or expense"}), 400
+        query += " AND type = ?"
+        parameters.append(transaction_type)
+
+    if category:
+        query += " AND category = ?"
+        parameters.append(category)
+
+    if start_date:
+        query += " AND date >= ?"
+        parameters.append(start_date)
+
+    if end_date:
+        query += " AND date <= ?"
+        parameters.append(end_date)
+
+    query += " ORDER BY date DESC, id DESC"
+
+    connection = get_db_connection()
+    transactions = connection.execute(query, parameters).fetchall()
     connection.close()
 
     return jsonify([dict(transaction) for transaction in transactions])
@@ -121,13 +144,7 @@ def get_category_summary():
     connection.close()
 
     return jsonify(
-        [
-            {
-                "category": row["category"],
-                "total": float(row["total"]),
-            }
-            for row in categories
-        ]
+        [{"category": row["category"], "total": float(row["total"])} for row in categories]
     )
 
 
@@ -150,13 +167,7 @@ def get_monthly_summary():
     connection.close()
 
     return jsonify(
-        [
-            {
-                "month": row["month"],
-                "total": float(row["total"]),
-            }
-            for row in monthly_data
-        ]
+        [{"month": row["month"], "total": float(row["total"])} for row in monthly_data]
     )
 
 
@@ -171,17 +182,13 @@ def add_transaction():
     date = str(data.get("date", "")).strip()
 
     if transaction_type not in ["income", "expense"]:
-        return jsonify(
-            {"error": "Transaction type must be income or expense"}
-        ), 400
+        return jsonify({"error": "Transaction type must be income or expense"}), 400
 
     if not description:
         return jsonify({"error": "Description is required"}), 400
 
     if len(description) > 100:
-        return jsonify(
-            {"error": "Description must be 100 characters or less"}
-        ), 400
+        return jsonify({"error": "Description must be 100 characters or less"}), 400
 
     try:
         amount = float(amount)
@@ -198,30 +205,20 @@ def add_transaction():
         return jsonify({"error": "Category is required"}), 400
 
     if len(category) > 50:
-        return jsonify(
-            {"error": "Category must be 50 characters or less"}
-        ), 400
+        return jsonify({"error": "Category must be 50 characters or less"}), 400
 
     if not date:
         return jsonify({"error": "Date is required"}), 400
 
     connection = get_db_connection()
-
     cursor = connection.execute(
         """
         INSERT INTO transactions
         (type, description, amount, category, date)
         VALUES (?, ?, ?, ?, ?)
         """,
-        (
-            transaction_type,
-            description,
-            amount,
-            category,
-            date,
-        ),
+        (transaction_type, description, amount, category, date),
     )
-
     connection.commit()
 
     transaction = connection.execute(
@@ -232,7 +229,6 @@ def add_transaction():
         """,
         (cursor.lastrowid,),
     ).fetchone()
-
     connection.close()
 
     return jsonify(dict(transaction)), 201
@@ -249,12 +245,13 @@ def update_transaction(transaction_id):
     date = str(data.get("date", "")).strip()
 
     if transaction_type not in ["income", "expense"]:
-        return jsonify(
-            {"error": "Transaction type must be income or expense"}
-        ), 400
+        return jsonify({"error": "Transaction type must be income or expense"}), 400
 
     if not description:
         return jsonify({"error": "Description is required"}), 400
+
+    if len(description) > 100:
+        return jsonify({"error": "Description must be 100 characters or less"}), 400
 
     try:
         amount = float(amount)
@@ -264,8 +261,14 @@ def update_transaction(transaction_id):
     if amount <= 0:
         return jsonify({"error": "Amount must be greater than zero"}), 400
 
+    if amount > 100000000:
+        return jsonify({"error": "Amount is too large"}), 400
+
     if not category:
         return jsonify({"error": "Category is required"}), 400
+
+    if len(category) > 50:
+        return jsonify({"error": "Category must be 50 characters or less"}), 400
 
     if not date:
         return jsonify({"error": "Date is required"}), 400
@@ -283,10 +286,7 @@ def update_transaction(transaction_id):
 
     if existing_transaction is None:
         connection.close()
-
-        return jsonify(
-            {"error": "Transaction not found"}
-        ), 404
+        return jsonify({"error": "Transaction not found"}), 404
 
     connection.execute(
         """
@@ -298,16 +298,8 @@ def update_transaction(transaction_id):
             date = ?
         WHERE id = ?
         """,
-        (
-            transaction_type,
-            description,
-            amount,
-            category,
-            date,
-            transaction_id,
-        ),
+        (transaction_type, description, amount, category, date, transaction_id),
     )
-
     connection.commit()
 
     transaction = connection.execute(
@@ -318,16 +310,12 @@ def update_transaction(transaction_id):
         """,
         (transaction_id,),
     ).fetchone()
-
     connection.close()
 
     return jsonify(dict(transaction)), 200
 
 
-@app.route(
-    "/api/transactions/<int:transaction_id>",
-    methods=["DELETE"],
-)
+@app.route("/api/transactions/<int:transaction_id>", methods=["DELETE"])
 def delete_transaction(transaction_id):
     connection = get_db_connection()
 
@@ -342,10 +330,7 @@ def delete_transaction(transaction_id):
 
     if transaction is None:
         connection.close()
-
-        return jsonify(
-            {"error": "Transaction not found"}
-        ), 404
+        return jsonify({"error": "Transaction not found"}), 404
 
     connection.execute(
         """
@@ -354,15 +339,10 @@ def delete_transaction(transaction_id):
         """,
         (transaction_id,),
     )
-
     connection.commit()
     connection.close()
 
-    return jsonify(
-        {
-            "message": "Transaction deleted successfully"
-        }
-    )
+    return jsonify({"message": "Transaction deleted successfully"})
 
 
 if __name__ == "__main__":

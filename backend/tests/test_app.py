@@ -92,6 +92,114 @@ def test_get_transactions(client):
     assert data[0]["description"] == "Transport"
 
 
+def test_filter_by_type(client):
+    create_transaction(
+        client,
+        transaction_type="expense",
+        description="Lunch",
+        amount=500,
+        category="Food",
+    )
+
+    create_transaction(
+        client,
+        transaction_type="income",
+        description="Salary",
+        amount=50000,
+        category="Salary",
+    )
+
+    response = client.get("/api/transactions?type=expense")
+
+    assert response.status_code == 200
+
+    data = response.get_json()
+
+    assert len(data) == 1
+    assert data[0]["description"] == "Lunch"
+    assert data[0]["type"] == "expense"
+
+
+def test_filter_by_category(client):
+    create_transaction(
+        client,
+        description="Lunch",
+        amount=500,
+        category="Food",
+    )
+
+    create_transaction(
+        client,
+        description="Bus",
+        amount=300,
+        category="Transport",
+    )
+
+    response = client.get(
+        "/api/transactions?category=Food"
+    )
+
+    assert response.status_code == 200
+
+    data = response.get_json()
+
+    assert len(data) == 1
+    assert data[0]["category"] == "Food"
+
+
+def test_filter_by_date_range(client):
+    create_transaction(
+        client,
+        description="January expense",
+        amount=1000,
+        category="Food",
+        date="2026-01-15",
+    )
+
+    create_transaction(
+        client,
+        description="February expense",
+        amount=2000,
+        category="Shopping",
+        date="2026-02-15",
+    )
+
+    create_transaction(
+        client,
+        description="March expense",
+        amount=3000,
+        category="Transport",
+        date="2026-03-15",
+    )
+
+    response = client.get(
+        "/api/transactions"
+        "?start_date=2026-02-01"
+        "&end_date=2026-02-28"
+    )
+
+    assert response.status_code == 200
+
+    data = response.get_json()
+
+    assert len(data) == 1
+    assert data[0]["description"] == "February expense"
+
+
+def test_invalid_transaction_type_filter(client):
+    response = client.get(
+        "/api/transactions?type=invalid"
+    )
+
+    assert response.status_code == 400
+
+    data = response.get_json()
+
+    assert data["error"] == (
+        "Type must be income or expense"
+    )
+
+
 def test_invalid_transaction(client):
     response = create_transaction(
         client,
@@ -120,6 +228,7 @@ def test_delete_transaction(client):
     )
 
     assert response.status_code == 200
+
     assert response.get_json()["message"] == (
         "Transaction deleted successfully"
     )
@@ -168,7 +277,10 @@ def test_update_missing_transaction(client):
     )
 
     assert response.status_code == 404
-    assert response.get_json()["error"] == "Transaction not found"
+
+    assert response.get_json()["error"] == (
+        "Transaction not found"
+    )
 
 
 def test_summary(client):
