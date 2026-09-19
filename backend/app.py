@@ -131,6 +131,35 @@ def get_category_summary():
     )
 
 
+@app.route("/api/summary/monthly", methods=["GET"])
+def get_monthly_summary():
+    connection = get_db_connection()
+
+    monthly_data = connection.execute(
+        """
+        SELECT
+            substr(date, 1, 7) AS month,
+            SUM(amount) AS total
+        FROM transactions
+        WHERE type = 'expense'
+        GROUP BY substr(date, 1, 7)
+        ORDER BY month DESC
+        """
+    ).fetchall()
+
+    connection.close()
+
+    return jsonify(
+        [
+            {
+                "month": row["month"],
+                "total": float(row["total"]),
+            }
+            for row in monthly_data
+        ]
+    )
+
+
 @app.route("/api/transactions", methods=["POST"])
 def add_transaction():
     data = request.get_json(silent=True) or {}
