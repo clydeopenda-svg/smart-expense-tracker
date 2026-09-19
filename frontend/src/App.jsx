@@ -3,18 +3,23 @@ import { useEffect, useState } from "react";
 const API_URL = "http://127.0.0.1:5000/api/transactions";
 
 const categories = [
-  { name: "Food", icon: "🍴" },
-  { name: "Transport", icon: "🚗" },
-  { name: "Bills", icon: "⚡" },
-  { name: "Shopping", icon: "🛍️" },
-  { name: "Entertainment", icon: "🎬" },
-  { name: "Health", icon: "❤️" },
-  { name: "Education", icon: "📚" },
-  { name: "Other", icon: "•••" },
+  { name: "Food", icon: "🍴", className: "category-food" },
+  { name: "Transport", icon: "🚗", className: "category-transport" },
+  { name: "Bills", icon: "⚡", className: "category-bills" },
+  { name: "Shopping", icon: "🛍️", className: "category-shopping" },
+  {
+    name: "Entertainment",
+    icon: "🎬",
+    className: "category-entertainment",
+  },
+  { name: "Health", icon: "❤️", className: "category-health" },
+  { name: "Education", icon: "📚", className: "category-education" },
+  { name: "Other", icon: "•••", className: "category-other" },
 ];
 
 function App() {
   const [transactions, setTransactions] = useState([]);
+
   const [type, setType] = useState("expense");
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState("");
@@ -25,6 +30,7 @@ function App() {
 
   const [filterType, setFilterType] = useState("all");
   const [filterCategory, setFilterCategory] = useState("all");
+
   const [monthlyBudget, setMonthlyBudget] = useState(50000);
 
   const [loading, setLoading] = useState(true);
@@ -46,6 +52,7 @@ function App() {
       }
 
       const data = await response.json();
+
       setTransactions(data);
       setError("");
     } catch (err) {
@@ -71,6 +78,11 @@ function App() {
 
     if (!category) {
       setError("Please select a category.");
+      return;
+    }
+
+    if (!date) {
+      setError("Please select a date.");
       return;
     }
 
@@ -101,8 +113,9 @@ function App() {
 
       setDescription("");
       setAmount("");
-      setCategory("Food");
       setType("expense");
+      setCategory("Food");
+      setDate(new Date().toISOString().split("T")[0]);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -112,20 +125,42 @@ function App() {
 
   async function handleDelete(id) {
     try {
+      setError("");
+
       const response = await fetch(`${API_URL}/${id}`, {
         method: "DELETE",
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        throw new Error("Failed to delete transaction");
+        throw new Error(data.error || "Failed to delete transaction");
       }
 
       setTransactions((current) =>
         current.filter((transaction) => transaction.id !== id)
       );
     } catch (err) {
-      setError("Could not delete the transaction.");
+      setError(err.message);
     }
+  }
+
+  function formatCurrency(value) {
+    return new Intl.NumberFormat("en-KE", {
+      style: "currency",
+      currency: "KES",
+      maximumFractionDigits: 0,
+    }).format(value);
+  }
+
+  function getCategoryDetails(transactionCategory) {
+    return (
+      categories.find((item) => item.name === transactionCategory) || {
+        name: transactionCategory,
+        icon: "•••",
+        className: "category-other",
+      }
+    );
   }
 
   const totalIncome = transactions
@@ -176,22 +211,6 @@ function App() {
     return matchesType && matchesCategory;
   });
 
-  function getCategoryIcon(transactionCategory) {
-    const found = categories.find(
-      (item) => item.name === transactionCategory
-    );
-
-    return found ? found.icon : "•••";
-  }
-
-  function formatCurrency(value) {
-    return new Intl.NumberFormat("en-KE", {
-      style: "currency",
-      currency: "KES",
-      maximumFractionDigits: 0,
-    }).format(value);
-  }
-
   return (
     <div className="app-shell">
       <header className="top-navigation">
@@ -208,12 +227,15 @@ function App() {
           <a href="#dashboard" className="nav-link active">
             Dashboard
           </a>
+
           <a href="#transactions" className="nav-link">
             Transactions
           </a>
+
           <a href="#budget" className="nav-link">
             Budget
           </a>
+
           <a href="#insights" className="nav-link">
             Insights
           </a>
@@ -263,7 +285,6 @@ function App() {
           <div className="balance-card-top">
             <div>
               <span className="balance-label">TOTAL BALANCE</span>
-
               <h3>{formatCurrency(balance)}</h3>
             </div>
 
@@ -275,6 +296,7 @@ function App() {
           <div className="balance-footer">
             <div>
               <span>Income</span>
+
               <strong className="income-text">
                 +{formatCurrency(totalIncome)}
               </strong>
@@ -282,6 +304,7 @@ function App() {
 
             <div>
               <span>Expenses</span>
+
               <strong className="expense-text">
                 -{formatCurrency(totalExpenses)}
               </strong>
@@ -289,93 +312,10 @@ function App() {
           </div>
         </section>
 
-<section className="financial-summary-card">
-  <div className="financial-summary-header">
-    <div>
-      <p className="section-kicker">FINANCIAL SUMMARY</p>
-      <h3>Your money at a glance</h3>
-    </div>
-
-    <div className="summary-period">
-      Current overview
-    </div>
-  </div>
-
-  <div className="summary-grid">
-    <div className="summary-item">
-      <div className="summary-item-header">
-        <span>Income</span>
-        <span className="summary-dot income-dot"></span>
-      </div>
-
-      <strong className="income-text">
-        {formatCurrency(totalIncome)}
-      </strong>
-
-      <div className="summary-bar">
-        <div
-          className="summary-bar-fill income-summary-fill"
-          style={{
-            width:
-              totalIncome > 0
-                ? `${Math.min(
-                    (totalIncome /
-                      Math.max(totalIncome, totalExpenses, 1)) *
-                      100,
-                    100
-                  )}%`
-                : "0%",
-          }}
-        />
-      </div>
-    </div>
-
-    <div className="summary-item">
-      <div className="summary-item-header">
-        <span>Expenses</span>
-        <span className="summary-dot expense-dot"></span>
-      </div>
-
-      <strong className="expense-text">
-        {formatCurrency(totalExpenses)}
-      </strong>
-
-      <div className="summary-bar">
-        <div
-          className="summary-bar-fill expense-summary-fill"
-          style={{
-            width:
-              totalExpenses > 0
-                ? `${Math.min(
-                    (totalExpenses /
-                      Math.max(totalIncome, totalExpenses, 1)) *
-                      100,
-                    100
-                  )}%`
-                : "0%",
-          }}
-        />
-      </div>
-    </div>
-
-    <div className="summary-item summary-balance">
-      <div className="summary-item-header">
-        <span>Net position</span>
-        <span className="summary-dot balance-dot"></span>
-      </div>
-
-      <strong>{formatCurrency(balance)}</strong>
-
-      <p>
-        {balance >= 0
-          ? "Your income is currently higher than your expenses."
-          : "Your expenses are currently higher than your income."}
-      </p>
-    </div>
-  </div>
-</section>
+        <section className="statistics-grid">
           <article className="stat-card">
             <div className="stat-icon income-icon">↗</div>
+
             <div>
               <span>Total income</span>
               <strong>{formatCurrency(totalIncome)}</strong>
@@ -384,6 +324,7 @@ function App() {
 
           <article className="stat-card">
             <div className="stat-icon expense-icon">↘</div>
+
             <div>
               <span>Total expenses</span>
               <strong>{formatCurrency(totalExpenses)}</strong>
@@ -392,6 +333,7 @@ function App() {
 
           <article className="stat-card">
             <div className="stat-icon budget-icon">◎</div>
+
             <div>
               <span>Budget remaining</span>
               <strong>{formatCurrency(budgetRemaining)}</strong>
@@ -400,11 +342,104 @@ function App() {
 
           <article className="stat-card">
             <div className="stat-icon transaction-icon-stat">#</div>
+
             <div>
               <span>Transactions</span>
               <strong>{transactions.length}</strong>
             </div>
           </article>
+        </section>
+
+        <section className="financial-summary-card">
+          <div className="financial-summary-header">
+            <div>
+              <p className="section-kicker">FINANCIAL SUMMARY</p>
+              <h3>Your money at a glance</h3>
+            </div>
+
+            <div className="summary-period">Current overview</div>
+          </div>
+
+          <div className="summary-grid">
+            <div className="summary-item">
+              <div className="summary-item-header">
+                <span>Income</span>
+                <span className="summary-dot income-dot"></span>
+              </div>
+
+              <strong className="income-text">
+                {formatCurrency(totalIncome)}
+              </strong>
+
+              <div className="summary-bar">
+                <div
+                  className="summary-bar-fill income-summary-fill"
+                  style={{
+                    width:
+                      totalIncome > 0
+                        ? `${Math.min(
+                            (totalIncome /
+                              Math.max(
+                                totalIncome,
+                                totalExpenses,
+                                1
+                              )) *
+                              100,
+                            100
+                          )}%`
+                        : "0%",
+                  }}
+                />
+              </div>
+            </div>
+
+            <div className="summary-item">
+              <div className="summary-item-header">
+                <span>Expenses</span>
+                <span className="summary-dot expense-dot"></span>
+              </div>
+
+              <strong className="expense-text">
+                {formatCurrency(totalExpenses)}
+              </strong>
+
+              <div className="summary-bar">
+                <div
+                  className="summary-bar-fill expense-summary-fill"
+                  style={{
+                    width:
+                      totalExpenses > 0
+                        ? `${Math.min(
+                            (totalExpenses /
+                              Math.max(
+                                totalIncome,
+                                totalExpenses,
+                                1
+                              )) *
+                              100,
+                            100
+                          )}%`
+                        : "0%",
+                  }}
+                />
+              </div>
+            </div>
+
+            <div className="summary-item summary-balance">
+              <div className="summary-item-header">
+                <span>Net position</span>
+                <span className="summary-dot balance-dot"></span>
+              </div>
+
+              <strong>{formatCurrency(balance)}</strong>
+
+              <p>
+                {balance >= 0
+                  ? "Your income is currently higher than your expenses."
+                  : "Your expenses are currently higher than your income."}
+              </p>
+            </div>
+          </div>
         </section>
 
         <section className="dashboard-columns">
@@ -419,6 +454,7 @@ function App() {
                 {largestCategory && (
                   <div className="category-highlight">
                     <span>{largestCategory.icon}</span>
+
                     <div>
                       <small>Highest category</small>
                       <strong>{largestCategory.name}</strong>
@@ -430,9 +466,12 @@ function App() {
               {categoryTotals.length === 0 ? (
                 <div className="empty-state">
                   <div className="empty-icon">◎</div>
+
                   <h4>No spending data yet</h4>
+
                   <p>
-                    Add an expense to start seeing your spending breakdown.
+                    Add an expense to start seeing your spending
+                    breakdown.
                   </p>
                 </div>
               ) : (
@@ -447,7 +486,9 @@ function App() {
                       <div className="category-row" key={item.name}>
                         <div className="category-row-top">
                           <div className="category-name">
-                            <span className="category-icon">
+                            <span
+                              className={`category-icon ${item.className}`}
+                            >
                               {item.icon}
                             </span>
 
@@ -455,7 +496,10 @@ function App() {
                           </div>
 
                           <div className="category-amount">
-                            <strong>{formatCurrency(item.total)}</strong>
+                            <strong>
+                              {formatCurrency(item.total)}
+                            </strong>
+
                             <span>{Math.round(percentage)}%</span>
                           </div>
                         </div>
@@ -463,7 +507,9 @@ function App() {
                         <div className="progress-track">
                           <div
                             className="progress-fill"
-                            style={{ width: `${percentage}%` }}
+                            style={{
+                              width: `${percentage}%`,
+                            }}
                           />
                         </div>
                       </div>
@@ -491,7 +537,9 @@ function App() {
               <div className="filter-bar">
                 <select
                   value={filterType}
-                  onChange={(event) => setFilterType(event.target.value)}
+                  onChange={(event) =>
+                    setFilterType(event.target.value)
+                  }
                 >
                   <option value="all">All types</option>
                   <option value="income">Income</option>
@@ -515,77 +563,94 @@ function App() {
               </div>
 
               {loading ? (
-                <div className="status-message">Loading transactions...</div>
+                <div className="status-message">
+                  Loading transactions...
+                </div>
               ) : filteredTransactions.length === 0 ? (
                 <div className="empty-state small-empty">
                   <div className="empty-icon">○</div>
+
                   <h4>No transactions found</h4>
+
                   <p>
-                    Try changing your filters or add a new transaction.
+                    Try changing your filters or add a new
+                    transaction.
                   </p>
                 </div>
               ) : (
                 <div className="transaction-list">
-                  {filteredTransactions.map((transaction) => (
-                    <article
-                      className={`modern-transaction ${
-                        transaction.type === "income"
-                          ? "transaction-income"
-                          : "transaction-expense"
-                      }`}
-                      key={transaction.id}
-                    >
-                      <div className="transaction-icon">
-                        {getCategoryIcon(transaction.category)}
-                      </div>
+                  {filteredTransactions.map((transaction) => {
+                    const categoryDetails = getCategoryDetails(
+                      transaction.category
+                    );
 
-                      <div className="transaction-information">
-                        <div className="transaction-title-row">
-                          <h4>{transaction.description}</h4>
+                    return (
+                      <article
+                        className={`modern-transaction ${
+                          transaction.type === "income"
+                            ? "transaction-income"
+                            : "transaction-expense"
+                        }`}
+                        key={transaction.id}
+                      >
+                        <div
+                          className={`transaction-icon ${categoryDetails.className}`}
+                        >
+                          {categoryDetails.icon}
+                        </div>
 
-                          <span
-                            className={`transaction-type-badge ${
+                        <div className="transaction-information">
+                          <div className="transaction-title-row">
+                            <h4>{transaction.description}</h4>
+
+                            <span
+                              className={`transaction-type-badge ${
+                                transaction.type === "income"
+                                  ? "income-badge"
+                                  : "expense-badge"
+                              }`}
+                            >
+                              {transaction.type === "income"
+                                ? "Income"
+                                : "Expense"}
+                            </span>
+                          </div>
+
+                          <div className="transaction-meta">
+                            <span>{transaction.category}</span>
+                            <span>•</span>
+                            <span>{transaction.date}</span>
+                          </div>
+                        </div>
+
+                        <div className="transaction-value">
+                          <strong
+                            className={
                               transaction.type === "income"
-                                ? "income-badge"
-                                : "expense-badge"
-                            }`}
+                                ? "income-text"
+                                : "expense-text"
+                            }
                           >
                             {transaction.type === "income"
-                              ? "Income"
-                              : "Expense"}
-                          </span>
+                              ? "+"
+                              : "-"}
+                            {formatCurrency(
+                              Number(transaction.amount)
+                            )}
+                          </strong>
+
+                          <button
+                            className="delete-button"
+                            onClick={() =>
+                              handleDelete(transaction.id)
+                            }
+                          >
+                            Delete
+                          </button>
                         </div>
-
-                        <div className="transaction-meta">
-                          <span>{transaction.category}</span>
-                          <span>•</span>
-                          <span>{transaction.date}</span>
-                        </div>
-                      </div>
-
-                      <div className="transaction-value">
-                        <strong
-                          className={
-                            transaction.type === "income"
-                              ? "income-text"
-                              : "expense-text"
-                          }
-                        >
-                          {transaction.type === "income" ? "+" : "-"}
-                          {formatCurrency(Number(transaction.amount))}
-                        </strong>
-
-                        <button
-                          className="delete-button"
-                          onClick={() =>
-                            handleDelete(transaction.id)
-                          }
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </article>
-                  ))}
+                      </article>
+                    );
+                  })}
                 </div>
               )}
             </section>
@@ -616,7 +681,9 @@ function App() {
                 <div className="progress-track">
                   <div
                     className="progress-fill budget-fill"
-                    style={{ width: `${budgetPercentage}%` }}
+                    style={{
+                      width: `${budgetPercentage}%`,
+                    }}
                   />
                 </div>
               </div>
