@@ -1,24 +1,32 @@
 # Smart Expense Tracker
 
-A full-stack personal finance application for tracking income, expenses, budgets, and spending patterns.
+A full-stack personal finance dashboard for tracking income, expenses, budgets, and spending patterns.
 
 ## Features
 
 - Add income and expense transactions
-- Categorize transactions
-- View current balance
-- View total income
-- View total expenses
-- Filter transactions by type
-- Filter transactions by category
+- Edit existing transactions
 - Delete transactions
-- Set a monthly spending budget
-- Track remaining budget
+- Categorize transactions
+- Filter transactions by:
+  - Type
+  - Category
+  - Start date
+  - End date
+- Automatically calculate:
+  - Total income
+  - Total expenses
+  - Current balance
+- Set and update a monthly spending budget
+- Track monthly budget usage
 - View spending by category
-- Responsive design for desktop, tablet, and mobile
-- Backend API tests
+- View monthly spending summaries
+- Receive simple financial insights
+- Responsive dashboard for desktop, tablet, and mobile
+- SQLite database for persistent data storage
+- Backend API tests with pytest
 
-## Technologies
+## Tech Stack
 
 ### Frontend
 
@@ -33,25 +41,25 @@ A full-stack personal finance application for tracking income, expenses, budgets
 - Flask
 - Flask-CORS
 - SQLite
-- Pytest
+- pytest
 
 ## Project Structure
 
 ```text
 smart-expense-tracker/
 ├── backend/
-│   ├── tests/
-│   │   └── test_app.py
 │   ├── app.py
 │   ├── requirements.txt
-│   └── expenses.db
+│   ├── expenses.db
+│   └── tests/
+│       └── test_app.py
 │
 ├── frontend/
 │   ├── src/
 │   │   ├── App.jsx
-│   │   └── index.css
+│   │   ├── index.css
+│   │   └── main.jsx
 │   ├── package.json
-│   └── ...
+│   └── vite.config.js
 │
-├── .gitignore
 └── README.md
