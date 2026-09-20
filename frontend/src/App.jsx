@@ -30,6 +30,8 @@ function App() {
     new Date().toISOString().split("T")[0]
   );
 
+  const [editingId, setEditingId] = useState(null);
+
   const [filterType, setFilterType] = useState("all");
   const [filterCategory, setFilterCategory] = useState("all");
 
@@ -81,6 +83,38 @@ function App() {
     }
   }
 
+  function resetTransactionForm() {
+    setType("expense");
+    setDescription("");
+    setAmount("");
+    setCategory("Food");
+    setDate(new Date().toISOString().split("T")[0]);
+    setEditingId(null);
+  }
+
+  function startEditing(transaction) {
+    setError("");
+
+    setEditingId(transaction.id);
+    setType(transaction.type);
+    setDescription(transaction.description);
+    setAmount(String(transaction.amount));
+    setCategory(transaction.category);
+    setDate(transaction.date);
+
+    document
+      .getElementById("transaction-form")
+      ?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+  }
+
+  function cancelEditing() {
+    resetTransactionForm();
+    setError("");
+  }
+
   async function handleSubmit(event) {
     event.preventDefault();
     setError("");
@@ -108,33 +142,49 @@ function App() {
     try {
       setSubmitting(true);
 
-      const response = await fetch(API_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          type,
-          description: description.trim(),
-          amount: Number(amount),
-          category,
-          date,
-        }),
-      });
+      const transactionData = {
+        type,
+        description: description.trim(),
+        amount: Number(amount),
+        category,
+        date,
+      };
+
+      const isEditing = editingId !== null;
+
+      const response = await fetch(
+        isEditing ? `${API_URL}/${editingId}` : API_URL,
+        {
+          method: isEditing ? "PUT" : "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(transactionData),
+        }
+      );
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "Failed to add transaction");
+        throw new Error(
+          data.error ||
+            (isEditing
+              ? "Failed to update transaction"
+              : "Failed to add transaction")
+        );
       }
 
-      setTransactions((current) => [data, ...current]);
+      if (isEditing) {
+        setTransactions((current) =>
+          current.map((transaction) =>
+            transaction.id === editingId ? data : transaction
+          )
+        );
+      } else {
+        setTransactions((current) => [data, ...current]);
+      }
 
-      setDescription("");
-      setAmount("");
-      setType("expense");
-      setCategory("Food");
-      setDate(new Date().toISOString().split("T")[0]);
+      resetTransactionForm();
     } catch (err) {
       setError(err.message);
     } finally {
@@ -159,6 +209,10 @@ function App() {
       setTransactions((current) =>
         current.filter((transaction) => transaction.id !== id)
       );
+
+      if (editingId === id) {
+        resetTransactionForm();
+      }
     } catch (err) {
       setError(err.message);
     }
@@ -681,12 +735,23 @@ function App() {
                             {formatCurrency(Number(transaction.amount))}
                           </strong>
 
-                          <button
-                            className="delete-button"
-                            onClick={() => handleDelete(transaction.id)}
-                          >
-                            Delete
-                          </button>
+                          <div className="transaction-actions">
+                            <button
+                              className="edit-button"
+                              type="button"
+                              onClick={() => startEditing(transaction)}
+                            >
+                              Edit
+                            </button>
+
+                            <button
+                              className="delete-button"
+                              type="button"
+                              onClick={() => handleDelete(transaction.id)}
+                            >
+                              Delete
+                            </button>
+                          </div>
                         </div>
                       </article>
                     );
@@ -810,14 +875,35 @@ function App() {
         <section className="dashboard-card add-transaction-card">
           <div className="section-heading">
             <div>
-              <p className="section-kicker">QUICK ACTION</p>
-              <h3>Add transaction</h3>
+              <p className="section-kicker">
+                {editingId !== null ? "EDIT TRANSACTION" : "QUICK ACTION"}
+              </p>
+
+              <h3>
+                {editingId !== null
+                  ? "Update transaction"
+                  : "Add transaction"}
+              </h3>
             </div>
+
+            {editingId !== null && (
+              <button
+                className="cancel-edit-button"
+                type="button"
+                onClick={cancelEditing}
+              >
+                Cancel editing
+              </button>
+            )}
           </div>
 
           {error && <div className="error-message">{error}</div>}
 
-          <form className="transaction-form" onSubmit={handleSubmit}>
+          <form
+            className="transaction-form"
+            id="transaction-form"
+            onSubmit={handleSubmit}
+          >
             <div className="form-group">
               <label>Type</label>
 
@@ -888,7 +974,13 @@ function App() {
               type="submit"
               disabled={submitting}
             >
-              {submitting ? "Adding..." : "Add transaction"}
+              {submitting
+                ? editingId !== null
+                  ? "Updating..."
+                  : "Adding..."
+                : editingId !== null
+                ? "Update transaction"
+                : "Add transaction"}
             </button>
           </form>
         </section>
