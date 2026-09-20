@@ -17,6 +17,7 @@ const categories = [
 
 function App() {
   const [transactions, setTransactions] = useState([]);
+
   const [type, setType] = useState("expense");
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState("");
@@ -27,6 +28,8 @@ function App() {
 
   const [filterType, setFilterType] = useState("all");
   const [filterCategory, setFilterCategory] = useState("all");
+  const [filterStartDate, setFilterStartDate] = useState("");
+  const [filterEndDate, setFilterEndDate] = useState("");
 
   const [editingId, setEditingId] = useState(null);
 
@@ -48,10 +51,11 @@ function App() {
       setLoading(true);
       setError("");
 
-      const [transactionsResponse, budgetResponse] = await Promise.all([
-        fetch(API_URL),
-        fetch(BUDGET_URL),
-      ]);
+      const [transactionsResponse, budgetResponse] =
+        await Promise.all([
+          fetch(API_URL),
+          fetch(BUDGET_URL),
+        ]);
 
       if (!transactionsResponse.ok) {
         throw new Error("Failed to load transactions.");
@@ -61,7 +65,9 @@ function App() {
         throw new Error("Failed to load budget.");
       }
 
-      const transactionsData = await transactionsResponse.json();
+      const transactionsData =
+        await transactionsResponse.json();
+
       const budgetData = await budgetResponse.json();
 
       setTransactions(transactionsData);
@@ -83,6 +89,13 @@ function App() {
     setCategory("Food");
     setDate(new Date().toISOString().split("T")[0]);
     setEditingId(null);
+  }
+
+  function resetFilters() {
+    setFilterType("all");
+    setFilterCategory("all");
+    setFilterStartDate("");
+    setFilterEndDate("");
   }
 
   function startEditing(transaction) {
@@ -176,9 +189,12 @@ function App() {
     try {
       setError("");
 
-      const response = await fetch(`${API_URL}/${transactionId}`, {
-        method: "DELETE",
-      });
+      const response = await fetch(
+        `${API_URL}/${transactionId}`,
+        {
+          method: "DELETE",
+        }
+      );
 
       const data = await response.json();
 
@@ -244,41 +260,61 @@ function App() {
     }
   }
 
-  const filteredTransactions = transactions.filter((transaction) => {
-    const matchesType =
-      filterType === "all" || transaction.type === filterType;
+  const filteredTransactions = transactions.filter(
+    (transaction) => {
+      const matchesType =
+        filterType === "all" ||
+        transaction.type === filterType;
 
-    const matchesCategory =
-      filterCategory === "all" ||
-      transaction.category === filterCategory;
+      const matchesCategory =
+        filterCategory === "all" ||
+        transaction.category === filterCategory;
 
-    return matchesType && matchesCategory;
-  });
+      const matchesStartDate =
+        !filterStartDate ||
+        transaction.date >= filterStartDate;
+
+      const matchesEndDate =
+        !filterEndDate ||
+        transaction.date <= filterEndDate;
+
+      return (
+        matchesType &&
+        matchesCategory &&
+        matchesStartDate &&
+        matchesEndDate
+      );
+    }
+  );
 
   const totalIncome = transactions
     .filter((transaction) => transaction.type === "income")
     .reduce(
-      (total, transaction) => total + Number(transaction.amount),
+      (total, transaction) =>
+        total + Number(transaction.amount),
       0
     );
 
   const totalExpenses = transactions
     .filter((transaction) => transaction.type === "expense")
     .reduce(
-      (total, transaction) => total + Number(transaction.amount),
+      (total, transaction) =>
+        total + Number(transaction.amount),
       0
     );
 
   const balance = totalIncome - totalExpenses;
 
-  // Calculate expenses for the current month only.
   const currentDate = new Date();
   const currentYear = currentDate.getFullYear();
   const currentMonth = currentDate.getMonth();
 
   const monthlyExpenses = transactions
     .filter((transaction) => {
-      if (transaction.type !== "expense" || !transaction.date) {
+      if (
+        transaction.type !== "expense" ||
+        !transaction.date
+      ) {
         return false;
       }
 
@@ -292,11 +328,13 @@ function App() {
       );
     })
     .reduce(
-      (total, transaction) => total + Number(transaction.amount),
+      (total, transaction) =>
+        total + Number(transaction.amount),
       0
     );
 
-  const budgetRemaining = monthlyBudget - monthlyExpenses;
+  const budgetRemaining =
+    monthlyBudget - monthlyExpenses;
 
   const budgetPercentage =
     monthlyBudget > 0
@@ -314,7 +352,8 @@ function App() {
           transaction.category === item.name
       )
       .reduce(
-        (sum, transaction) => sum + Number(transaction.amount),
+        (sum, transaction) =>
+          sum + Number(transaction.amount),
         0
       );
 
@@ -338,7 +377,9 @@ function App() {
 
   function getCategoryDetails(categoryName) {
     return (
-      categories.find((item) => item.name === categoryName) || {
+      categories.find(
+        (item) => item.name === categoryName
+      ) || {
         name: categoryName,
         icon: "•••",
       }
@@ -350,6 +391,7 @@ function App() {
       <nav className="top-navigation">
         <div className="brand">
           <div className="brand-mark">S</div>
+
           <div>
             <strong>Smart Expense</strong>
             <span>Personal finance dashboard</span>
@@ -365,8 +407,12 @@ function App() {
       <main className="dashboard-container">
         <section className="hero-section">
           <div>
-            <p className="section-kicker">YOUR MONEY AT A GLANCE</p>
+            <p className="section-kicker">
+              YOUR MONEY AT A GLANCE
+            </p>
+
             <h1>Take control of your money.</h1>
+
             <p className="hero-description">
               Track your spending, manage your budget, and
               understand where your money goes.
@@ -375,6 +421,7 @@ function App() {
 
           <div className="hero-date">
             <span>Today</span>
+
             <strong>
               {new Intl.DateTimeFormat("en-US", {
                 month: "short",
@@ -395,9 +442,13 @@ function App() {
           <article className="financial-summary-card balance-card">
             <div className="financial-summary-header">
               <div>
-                <span className="summary-label">Balance</span>
+                <span className="summary-label">
+                  Balance
+                </span>
+
                 <h2>{formatCurrency(balance)}</h2>
               </div>
+
               <span className="summary-icon">◈</span>
             </div>
 
@@ -409,9 +460,13 @@ function App() {
           <article className="financial-summary-card income-card">
             <div className="financial-summary-header">
               <div>
-                <span className="summary-label">Total income</span>
+                <span className="summary-label">
+                  Total income
+                </span>
+
                 <h2>{formatCurrency(totalIncome)}</h2>
               </div>
+
               <span className="summary-icon">↗</span>
             </div>
 
@@ -423,9 +478,13 @@ function App() {
           <article className="financial-summary-card expense-card">
             <div className="financial-summary-header">
               <div>
-                <span className="summary-label">Total expenses</span>
+                <span className="summary-label">
+                  Total expenses
+                </span>
+
                 <h2>{formatCurrency(totalExpenses)}</h2>
               </div>
+
               <span className="summary-icon">↘</span>
             </div>
 
@@ -471,19 +530,26 @@ function App() {
                 <div className="form-grid">
                   <label>
                     Type
+
                     <select
                       value={type}
                       onChange={(event) =>
                         setType(event.target.value)
                       }
                     >
-                      <option value="expense">Expense</option>
-                      <option value="income">Income</option>
+                      <option value="expense">
+                        Expense
+                      </option>
+
+                      <option value="income">
+                        Income
+                      </option>
                     </select>
                   </label>
 
                   <label>
                     Description
+
                     <input
                       type="text"
                       value={description}
@@ -497,6 +563,7 @@ function App() {
 
                   <label>
                     Amount
+
                     <input
                       type="number"
                       min="0"
@@ -512,6 +579,7 @@ function App() {
 
                   <label>
                     Category
+
                     <select
                       value={category}
                       onChange={(event) =>
@@ -527,12 +595,15 @@ function App() {
                         </option>
                       ))}
 
-                      <option value="Salary">Salary</option>
+                      <option value="Salary">
+                        Salary
+                      </option>
                     </select>
                   </label>
 
                   <label>
                     Date
+
                     <input
                       type="date"
                       value={date}
@@ -566,6 +637,7 @@ function App() {
                   <p className="section-kicker">
                     TRANSACTION HISTORY
                   </p>
+
                   <h2>Your transactions</h2>
                 </div>
 
@@ -583,7 +655,9 @@ function App() {
                 >
                   <option value="all">All types</option>
                   <option value="income">Income</option>
-                  <option value="expense">Expenses</option>
+                  <option value="expense">
+                    Expenses
+                  </option>
                 </select>
 
                 <select
@@ -592,7 +666,9 @@ function App() {
                     setFilterCategory(event.target.value)
                   }
                 >
-                  <option value="all">All categories</option>
+                  <option value="all">
+                    All categories
+                  </option>
 
                   {categories.map((item) => (
                     <option
@@ -605,85 +681,138 @@ function App() {
 
                   <option value="Salary">Salary</option>
                 </select>
+
+                <label className="date-filter">
+                  <span>From</span>
+
+                  <input
+                    type="date"
+                    value={filterStartDate}
+                    onChange={(event) =>
+                      setFilterStartDate(
+                        event.target.value
+                      )
+                    }
+                  />
+                </label>
+
+                <label className="date-filter">
+                  <span>To</span>
+
+                  <input
+                    type="date"
+                    value={filterEndDate}
+                    onChange={(event) =>
+                      setFilterEndDate(
+                        event.target.value
+                      )
+                    }
+                  />
+                </label>
+
+                <button
+                  className="clear-filters-button"
+                  type="button"
+                  onClick={resetFilters}
+                >
+                  Clear filters
+                </button>
               </div>
 
               {loading ? (
                 <div className="empty-state">
-                  <strong>Loading transactions...</strong>
+                  <strong>
+                    Loading transactions...
+                  </strong>
+
                   <p>
-                    Please wait while your financial data loads.
+                    Please wait while your financial data
+                    loads.
                   </p>
                 </div>
               ) : filteredTransactions.length === 0 ? (
                 <div className="empty-state">
-                  <strong>No transactions found.</strong>
+                  <strong>
+                    No transactions found.
+                  </strong>
+
                   <p>
-                    Add a transaction or change your filters.
+                    Add a transaction or change your
+                    filters.
                   </p>
                 </div>
               ) : (
                 <div className="transaction-list">
-                  {filteredTransactions.map((transaction) => {
-                    const categoryDetails =
-                      getCategoryDetails(
-                        transaction.category
-                      );
+                  {filteredTransactions.map(
+                    (transaction) => {
+                      const categoryDetails =
+                        getCategoryDetails(
+                          transaction.category
+                        );
 
-                    return (
-                      <article
-                        className="transaction-row"
-                        key={transaction.id}
-                      >
-                        <div className="transaction-icon">
-                          {categoryDetails.icon}
-                        </div>
+                      return (
+                        <article
+                          className="transaction-row"
+                          key={transaction.id}
+                        >
+                          <div className="transaction-icon">
+                            {categoryDetails.icon}
+                          </div>
 
-                        <div className="transaction-details">
-                          <strong>
-                            {transaction.description}
+                          <div className="transaction-details">
+                            <strong>
+                              {transaction.description}
+                            </strong>
+
+                            <span>
+                              {transaction.category} ·{" "}
+                              {transaction.date}
+                            </span>
+                          </div>
+
+                          <strong
+                            className={`transaction-amount ${transaction.type}`}
+                          >
+                            {transaction.type ===
+                            "income"
+                              ? "+"
+                              : "-"}
+                            {formatCurrency(
+                              Number(
+                                transaction.amount
+                              )
+                            )}
                           </strong>
 
-                          <span>
-                            {transaction.category} ·{" "}
-                            {transaction.date}
-                          </span>
-                        </div>
+                          <div className="transaction-actions">
+                            <button
+                              className="edit-button"
+                              type="button"
+                              onClick={() =>
+                                startEditing(
+                                  transaction
+                                )
+                              }
+                            >
+                              Edit
+                            </button>
 
-                        <strong
-                          className={`transaction-amount ${transaction.type}`}
-                        >
-                          {transaction.type === "income"
-                            ? "+"
-                            : "-"}
-                          {formatCurrency(
-                            Number(transaction.amount)
-                          )}
-                        </strong>
-
-                        <div className="transaction-actions">
-                          <button
-                            className="edit-button"
-                            type="button"
-                            onClick={() =>
-                              startEditing(transaction)
-                            }
-                          >
-                            Edit
-                          </button>
-
-                          <button
-                            className="delete-button"
-                            type="button"
-                            onClick={() =>
-                              handleDelete(transaction.id)
-                            }
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      </article>
-                    );
-                  })}
+                            <button
+                              className="delete-button"
+                              type="button"
+                              onClick={() =>
+                                handleDelete(
+                                  transaction.id
+                                )
+                              }
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </article>
+                      );
+                    }
+                  )}
                 </div>
               )}
             </section>
@@ -696,6 +825,7 @@ function App() {
                   <p className="section-kicker">
                     MONTHLY PLAN
                   </p>
+
                   <h2>Monthly budget</h2>
                 </div>
 
@@ -705,15 +835,19 @@ function App() {
               <form onSubmit={handleBudgetSave}>
                 <label className="budget-input-label">
                   Set monthly budget
+
                   <div className="budget-input-wrapper">
                     <span>KES</span>
+
                     <input
                       type="number"
                       min="0"
                       step="100"
                       value={budgetInput}
                       onChange={(event) =>
-                        setBudgetInput(event.target.value)
+                        setBudgetInput(
+                          event.target.value
+                        )
                       }
                       placeholder="50000"
                     />
@@ -740,6 +874,7 @@ function App() {
               <div className="budget-overview">
                 <div>
                   <span>Spent this month</span>
+
                   <strong>
                     {formatCurrency(monthlyExpenses)}
                   </strong>
@@ -747,6 +882,7 @@ function App() {
 
                 <div>
                   <span>Remaining</span>
+
                   <strong
                     className={
                       budgetRemaining < 0
@@ -754,7 +890,9 @@ function App() {
                         : ""
                     }
                   >
-                    {formatCurrency(budgetRemaining)}
+                    {formatCurrency(
+                      budgetRemaining
+                    )}
                   </strong>
                 </div>
               </div>
@@ -788,6 +926,7 @@ function App() {
                   <p className="section-kicker">
                     SPENDING BREAKDOWN
                   </p>
+
                   <h2>Where your money goes</h2>
                 </div>
               </div>
@@ -796,7 +935,8 @@ function App() {
                 {categoryTotals.map((item) => {
                   const percentage =
                     totalExpenses > 0
-                      ? (item.total / totalExpenses) * 100
+                      ? (item.total / totalExpenses) *
+                        100
                       : 0;
 
                   return (
@@ -831,7 +971,9 @@ function App() {
               <span className="insight-icon">✦</span>
 
               <div>
-                <p className="section-kicker">QUICK INSIGHT</p>
+                <p className="section-kicker">
+                  QUICK INSIGHT
+                </p>
 
                 <h3>
                   {largestCategory?.total > 0
