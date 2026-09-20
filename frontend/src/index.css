@@ -11,8 +11,9 @@ body {
   font-family:
     Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
     "Segoe UI", sans-serif;
-  background: #f4f5f7;
+  background: #f5f6f8;
   color: #17191f;
+  -webkit-font-smoothing: antialiased;
 }
 
 button,
@@ -25,6 +26,10 @@ button {
   cursor: pointer;
 }
 
+button:disabled {
+  cursor: not-allowed;
+}
+
 a {
   color: inherit;
   text-decoration: none;
@@ -34,12 +39,14 @@ a {
   min-height: 100vh;
 }
 
-/* ---------------- Navigation ---------------- */
+/* ================================
+   NAVIGATION
+================================ */
 
 .top-navigation {
   width: min(1380px, calc(100% - 48px));
-  margin: 0 auto;
   min-height: 82px;
+  margin: 0 auto;
 
   display: flex;
   align-items: center;
@@ -50,10 +57,11 @@ a {
 }
 
 .brand-area {
+  min-width: 210px;
+
   display: flex;
   align-items: center;
   gap: 12px;
-  min-width: 210px;
 }
 
 .brand-mark {
@@ -66,15 +74,19 @@ a {
   border-radius: 14px;
 
   background: #17191f;
-  color: white;
+  color: #ffffff;
 
   font-size: 18px;
   font-weight: 800;
+
+  box-shadow: 0 8px 20px rgba(23, 25, 31, 0.14);
 }
 
 .brand-area h1 {
   margin: 0;
+
   font-size: 17px;
+  font-weight: 800;
   letter-spacing: -0.4px;
 }
 
@@ -89,7 +101,7 @@ a {
 .main-navigation {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
 .nav-link {
@@ -104,12 +116,14 @@ a {
 
   transition:
     background 0.2s ease,
-    color 0.2s ease;
+    color 0.2s ease,
+    transform 0.2s ease;
 }
 
 .nav-link:hover {
   background: #e9ebef;
   color: #17191f;
+  transform: translateY(-1px);
 }
 
 .nav-link.active {
@@ -118,11 +132,12 @@ a {
 }
 
 .profile-area {
+  min-width: 210px;
+
   display: flex;
   align-items: center;
-  gap: 10px;
-  min-width: 210px;
   justify-content: flex-end;
+  gap: 10px;
 }
 
 .notification-button {
@@ -135,10 +150,21 @@ a {
   border: 1px solid #e1e3e7;
   border-radius: 12px;
 
+  background: #ffffff;
   color: #656a74;
-  background: white;
 
   font-size: 18px;
+
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    background 0.2s ease;
+}
+
+.notification-button:hover {
+  transform: translateY(-1px);
+  border-color: #d4d6dc;
+  background: #fafafa;
 }
 
 .profile-avatar {
@@ -170,7 +196,9 @@ a {
   font-size: 10px;
 }
 
-/* ---------------- Main dashboard ---------------- */
+/* ================================
+   MAIN DASHBOARD
+================================ */
 
 .dashboard-container {
   width: min(1380px, calc(100% - 48px));
@@ -206,7 +234,7 @@ a {
 }
 
 .dashboard-hero h2 span {
-  color: #7d72df;
+  color: #766be0;
 }
 
 .hero-description {
@@ -215,6 +243,7 @@ a {
 
   color: #858a95;
   font-size: 14px;
+  line-height: 1.6;
 }
 
 .hero-date {
@@ -232,7 +261,9 @@ a {
   font-size: 13px;
 }
 
-/* ---------------- Balance ---------------- */
+/* ================================
+   BALANCE CARD
+================================ */
 
 .balance-card {
   min-height: 275px;
@@ -242,13 +273,40 @@ a {
   flex-direction: column;
   justify-content: space-between;
 
+  overflow: hidden;
+  position: relative;
+
   border-radius: 30px;
 
   background:
-    radial-gradient(circle at 85% 20%, rgba(255, 255, 255, 0.42), transparent 28%),
+    radial-gradient(
+      circle at 85% 20%,
+      rgba(255, 255, 255, 0.5),
+      transparent 28%
+    ),
+    radial-gradient(
+      circle at 10% 100%,
+      rgba(255, 255, 255, 0.2),
+      transparent 30%
+    ),
     linear-gradient(135deg, #ddd8ff 0%, #d9d2ff 45%, #c8d9ff 100%);
 
   box-shadow: 0 22px 60px rgba(82, 76, 135, 0.1);
+}
+
+.balance-card::after {
+  content: "";
+  width: 220px;
+  height: 220px;
+
+  position: absolute;
+  right: -70px;
+  bottom: -110px;
+
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 50%;
+
+  pointer-events: none;
 }
 
 .balance-card-top {
@@ -307,7 +365,9 @@ a {
   font-size: 14px;
 }
 
-/* ---------------- Stats ---------------- */
+/* ================================
+   STATISTICS
+================================ */
 
 .statistics-grid {
   display: grid;
@@ -328,7 +388,20 @@ a {
   border: 1px solid #e6e7eb;
   border-radius: 22px;
 
-  background: rgba(255, 255, 255, 0.72);
+  background: rgba(255, 255, 255, 0.78);
+
+  box-shadow: 0 8px 25px rgba(28, 30, 36, 0.025);
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  border-color: #dcdee4;
+  box-shadow: 0 14px 30px rgba(28, 30, 36, 0.06);
 }
 
 .stat-icon {
@@ -380,11 +453,13 @@ a {
   font-size: 18px;
   letter-spacing: -0.4px;
 }
-/* ---------------- Financial summary ---------------- */
+
+/* ================================
+   FINANCIAL SUMMARY
+================================ */
 
 .financial-summary-card {
   margin: 14px 0;
-
   padding: 28px;
 
   border: 1px solid #e5e6ea;
@@ -399,7 +474,6 @@ a {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-
   gap: 20px;
 
   margin-bottom: 24px;
@@ -433,7 +507,6 @@ a {
 
 .summary-item {
   min-height: 125px;
-
   padding: 18px;
 
   border: 1px solid #ececef;
@@ -458,7 +531,6 @@ a {
 .summary-dot {
   width: 7px;
   height: 7px;
-
   border-radius: 50%;
 }
 
@@ -496,7 +568,6 @@ a {
 
 .summary-bar-fill {
   height: 100%;
-
   border-radius: inherit;
 
   transition: width 0.5s ease;
@@ -526,7 +597,6 @@ a {
 
 .summary-balance p {
   max-width: 280px;
-
   margin: 10px 0 0;
 
   color: #85829a;
@@ -535,7 +605,9 @@ a {
   line-height: 1.5;
 }
 
-/* ---------------- Dashboard columns ---------------- */
+/* ================================
+   DASHBOARD COLUMNS
+================================ */
 
 .dashboard-columns {
   display: grid;
@@ -556,9 +628,18 @@ a {
   border: 1px solid #e5e6ea;
   border-radius: 25px;
 
-  background: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.82);
 
   box-shadow: 0 10px 35px rgba(28, 30, 36, 0.035);
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.dashboard-card:hover {
+  border-color: #dedfe4;
+  box-shadow: 0 14px 40px rgba(28, 30, 36, 0.045);
 }
 
 .section-heading {
@@ -577,7 +658,9 @@ a {
   letter-spacing: -0.7px;
 }
 
-/* ---------------- Spending ---------------- */
+/* ================================
+   SPENDING
+================================ */
 
 .category-highlight {
   display: flex;
@@ -616,10 +699,18 @@ a {
   gap: 21px;
 }
 
+.category-row {
+  transition: transform 0.2s ease;
+}
+
+.category-row:hover {
+  transform: translateX(2px);
+}
+
 .category-row-top {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
   gap: 20px;
 
   margin-bottom: 9px;
@@ -658,6 +749,7 @@ a {
   min-width: 32px;
 
   color: #979ba5;
+
   font-size: 10px;
   text-align: right;
 }
@@ -683,7 +775,9 @@ a {
   transition: width 0.5s ease;
 }
 
-/* ---------------- Transactions ---------------- */
+/* ================================
+   TRANSACTIONS
+================================ */
 
 .transaction-count {
   color: #969aa4;
@@ -715,25 +809,30 @@ input {
 
   transition:
     border-color 0.2s ease,
-    box-shadow 0.2s ease;
+    box-shadow 0.2s ease,
+    background 0.2s ease;
 }
 
 select {
   padding: 11px 13px;
-
   font-size: 11px;
 }
 
 input {
   padding: 12px 13px;
-
   font-size: 12px;
+}
+
+select:hover,
+input:hover {
+  border-color: #d5d7dc;
+  background: #ffffff;
 }
 
 select:focus,
 input:focus {
   border-color: #a49be9;
-
+  background: #ffffff;
   box-shadow: 0 0 0 3px rgba(145, 133, 230, 0.1);
 }
 
@@ -758,12 +857,16 @@ input:focus {
 
   transition:
     transform 0.2s ease,
-    background 0.2s ease;
+    background 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .modern-transaction:hover {
   transform: translateY(-1px);
-  background: white;
+  border-color: #dedfe4;
+  background: #ffffff;
+  box-shadow: 0 8px 20px rgba(28, 30, 36, 0.04);
 }
 
 .transaction-income {
@@ -810,6 +913,8 @@ input:focus {
 
 .transaction-type-badge {
   padding: 4px 7px;
+
+  flex-shrink: 0;
 
   border-radius: 7px;
 
@@ -860,10 +965,19 @@ input:focus {
   color: #aaaeb7;
 
   font-size: 9px;
+
+  transition: color 0.2s ease;
 }
 
 .delete-button:hover {
   color: #bd5360;
+}
+
+.delete-button:focus-visible,
+.submit-button:focus-visible,
+.nav-link:focus-visible {
+  outline: 3px solid rgba(118, 107, 224, 0.25);
+  outline-offset: 2px;
 }
 
 .income-text {
@@ -874,7 +988,9 @@ input:focus {
   color: #ad4b58;
 }
 
-/* ---------------- Budget ---------------- */
+/* ================================
+   BUDGET
+================================ */
 
 .budget-symbol {
   width: 35px;
@@ -913,6 +1029,7 @@ input:focus {
   margin-bottom: 8px;
 
   color: #8c9099;
+
   font-size: 10px;
 }
 
@@ -958,6 +1075,7 @@ input:focus {
   display: block;
 
   color: #858a94;
+
   font-size: 10px;
   font-weight: 700;
 }
@@ -966,11 +1084,24 @@ input:focus {
   margin-top: 7px;
 }
 
-/* ---------------- Insight ---------------- */
+.budget-save-button {
+  width: 100%;
+  margin-top: 10px;
+}
+
+/* ================================
+   INSIGHTS
+================================ */
 
 .insight-card {
+  overflow: hidden;
+
   background:
-    radial-gradient(circle at 90% 10%, rgba(255, 255, 255, 0.5), transparent 30%),
+    radial-gradient(
+      circle at 90% 10%,
+      rgba(255, 255, 255, 0.5),
+      transparent 30%
+    ),
     linear-gradient(135deg, #dedaff, #d4e1ff);
 }
 
@@ -1010,7 +1141,9 @@ input:focus {
   line-height: 1.6;
 }
 
-/* ---------------- Empty and status states ---------------- */
+/* ================================
+   EMPTY / STATUS
+================================ */
 
 .empty-state {
   min-height: 190px;
@@ -1037,7 +1170,6 @@ input:focus {
   border-radius: 13px;
 
   background: #f0f1f4;
-
   color: #999da6;
 
   font-size: 18px;
@@ -1081,7 +1213,9 @@ input:focus {
   font-size: 11px;
 }
 
-/* ---------------- Add transaction ---------------- */
+/* ================================
+   ADD TRANSACTION
+================================ */
 
 .add-transaction-card {
   margin-top: 14px;
@@ -1114,28 +1248,37 @@ input:focus {
   border-radius: 12px;
 
   background: #17191f;
-  color: white;
+  color: #ffffff;
 
   font-size: 11px;
   font-weight: 750;
 
   white-space: nowrap;
 
+  box-shadow: 0 8px 18px rgba(23, 25, 31, 0.1);
+
   transition:
     transform 0.2s ease,
-    opacity 0.2s ease;
+    opacity 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
-.submit-button:hover {
+.submit-button:hover:not(:disabled) {
   transform: translateY(-1px);
+  box-shadow: 0 12px 24px rgba(23, 25, 31, 0.15);
+}
+
+.submit-button:active:not(:disabled) {
+  transform: translateY(0);
 }
 
 .submit-button:disabled {
-  cursor: not-allowed;
   opacity: 0.6;
 }
 
-/* ---------------- Responsive ---------------- */
+/* ================================
+   RESPONSIVE — TABLET
+================================ */
 
 @media (max-width: 1100px) {
   .main-navigation {
@@ -1159,26 +1302,33 @@ input:focus {
   }
 }
 
+/* ================================
+   RESPONSIVE — MOBILE
+================================ */
+
 @media (max-width: 700px) {
   .top-navigation,
   .dashboard-container {
-    width: min(100% - 28px, 1380px);
-      .financial-summary-card {
-    padding: 21px;
-  }
-
-  .financial-summary-header {
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  .summary-grid {
-    grid-template-columns: 1fr;
-  }
+    width: calc(100% - 28px);
   }
 
   .top-navigation {
     min-height: 70px;
+    gap: 12px;
+  }
+
+  .brand-area {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .brand-mark {
+    width: 38px;
+    height: 38px;
+  }
+
+  .brand-area h1 {
+    font-size: 15px;
   }
 
   .profile-details,
@@ -1186,22 +1336,29 @@ input:focus {
     display: none;
   }
 
-  .brand-area {
-    min-width: auto;
-  }
-
   .profile-area {
     min-width: auto;
   }
 
+  .profile-avatar {
+    width: 36px;
+    height: 36px;
+  }
+
   .dashboard-container {
     padding-top: 30px;
+    padding-bottom: 40px;
   }
 
   .dashboard-hero {
     align-items: flex-start;
     flex-direction: column;
     gap: 20px;
+  }
+
+  .hero-description {
+    max-width: 330px;
+    line-height: 1.5;
   }
 
   .hero-date {
@@ -1216,6 +1373,7 @@ input:focus {
   .balance-card {
     min-height: 230px;
     padding: 25px;
+
     border-radius: 24px;
   }
 
@@ -1229,6 +1387,8 @@ input:focus {
   }
 
   .balance-footer {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     gap: 25px;
   }
 
@@ -1237,7 +1397,35 @@ input:focus {
   }
 
   .stat-card {
+    min-height: 96px;
     padding: 15px;
+  }
+
+  .stat-icon {
+    width: 36px;
+    height: 36px;
+  }
+
+  .stat-card strong {
+    font-size: 15px;
+  }
+
+  .financial-summary-card {
+    padding: 21px;
+    overflow: hidden;
+  }
+
+  .financial-summary-header {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .summary-item {
+    min-height: 110px;
   }
 
   .dashboard-card {
@@ -1254,111 +1442,6 @@ input:focus {
     align-self: flex-start;
   }
 
-  .filter-bar {
-    flex-direction: column;
-  }
-
-  .modern-transaction {
-    grid-template-columns: 38px minmax(0, 1fr);
-  }
-
-  .transaction-value {
-    grid-column: 2;
-    align-items: flex-start;
-  }
-
-  .transaction-value strong {
-    font-size: 13px;
-  }
-
-  .transaction-form {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 430px) {
-  .statistics-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .balance-footer {
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  .transaction-title-row {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-
-  .transaction-meta {
-    flex-wrap: wrap;
-  }
-}
-/* ---------------- Mobile dashboard improvements ---------------- */
-
-@media (max-width: 700px) {
-  .top-navigation {
-    gap: 12px;
-  }
-
-  .brand-area {
-    flex: 1;
-  }
-
-  .brand-mark {
-    width: 38px;
-    height: 38px;
-  }
-
-  .brand-area h1 {
-    font-size: 15px;
-  }
-
-  .profile-avatar {
-    width: 36px;
-    height: 36px;
-  }
-
-  .dashboard-container {
-    padding-bottom: 40px;
-  }
-
-  .hero-description {
-    max-width: 330px;
-    line-height: 1.5;
-  }
-
-  .balance-card {
-    overflow: hidden;
-  }
-
-  .balance-footer {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .stat-card {
-    min-height: 96px;
-  }
-
-  .stat-icon {
-    width: 36px;
-    height: 36px;
-  }
-
-  .stat-card strong {
-    font-size: 15px;
-  }
-
-  .financial-summary-card {
-    overflow: hidden;
-  }
-
-  .summary-item {
-    min-height: 110px;
-  }
-
   .category-row-top {
     gap: 10px;
   }
@@ -1367,7 +1450,13 @@ input:focus {
     flex-shrink: 0;
   }
 
+  .filter-bar {
+    flex-direction: column;
+  }
+
   .modern-transaction {
+    grid-template-columns: 38px minmax(0, 1fr);
+    gap: 10px;
     padding: 13px;
   }
 
@@ -1375,16 +1464,34 @@ input:focus {
     overflow: hidden;
   }
 
+  .transaction-title-row {
+    align-items: flex-start;
+  }
+
   .transaction-title-row h4 {
     max-width: 100%;
   }
 
   .transaction-value {
+    grid-column: 2;
+    align-items: flex-start;
     padding-top: 2px;
+  }
+
+  .transaction-value strong {
+    font-size: 13px;
   }
 
   .delete-button {
     padding: 5px 0;
+  }
+
+  .transaction-form {
+    grid-template-columns: 1fr;
+  }
+
+  .submit-button {
+    min-height: 46px;
   }
 
   .budget-summary {
@@ -1394,11 +1501,11 @@ input:focus {
   .insight-card h3 {
     font-size: 20px;
   }
-
-  .submit-button {
-    min-height: 46px;
-  }
 }
+
+/* ================================
+   RESPONSIVE — SMALL PHONES
+================================ */
 
 @media (max-width: 430px) {
   .dashboard-hero h2 {
@@ -1411,9 +1518,11 @@ input:focus {
 
   .balance-footer {
     grid-template-columns: 1fr;
+    gap: 10px;
   }
 
   .statistics-grid {
+    grid-template-columns: 1fr;
     gap: 9px;
   }
 
@@ -1431,27 +1540,32 @@ input:focus {
     font-size: 13px;
   }
 
-  .category-name strong {
-    font-size: 11px;
-  }
-
+  .category-name strong,
   .category-amount strong {
     font-size: 11px;
   }
 
   .modern-transaction {
     grid-template-columns: 36px minmax(0, 1fr);
-    gap: 10px;
   }
 
   .transaction-icon {
     width: 36px;
     height: 36px;
+
     font-size: 14px;
+  }
+
+  .transaction-title-row {
+    flex-direction: column;
   }
 
   .transaction-title-row h4 {
     font-size: 12px;
+  }
+
+  .transaction-meta {
+    flex-wrap: wrap;
   }
 
   .transaction-value {
