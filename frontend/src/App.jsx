@@ -5,23 +5,18 @@ const API_URL = `${API_BASE_URL}/transactions`;
 const BUDGET_URL = `${API_BASE_URL}/budget`;
 
 const categories = [
-  { name: "Food", icon: "🍴", className: "category-food" },
-  { name: "Transport", icon: "🚗", className: "category-transport" },
-  { name: "Bills", icon: "⚡", className: "category-bills" },
-  { name: "Shopping", icon: "🛍️", className: "category-shopping" },
-  {
-    name: "Entertainment",
-    icon: "🎬",
-    className: "category-entertainment",
-  },
-  { name: "Health", icon: "❤️", className: "category-health" },
-  { name: "Education", icon: "📚", className: "category-education" },
-  { name: "Other", icon: "•••", className: "category-other" },
+  { name: "Food", icon: "🍴" },
+  { name: "Transport", icon: "🚗" },
+  { name: "Bills", icon: "⚡" },
+  { name: "Shopping", icon: "🛍️" },
+  { name: "Entertainment", icon: "🎬" },
+  { name: "Health", icon: "❤️" },
+  { name: "Education", icon: "📚" },
+  { name: "Other", icon: "•••" },
 ];
 
 function App() {
   const [transactions, setTransactions] = useState([]);
-
   const [type, setType] = useState("expense");
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState("");
@@ -30,10 +25,10 @@ function App() {
     new Date().toISOString().split("T")[0]
   );
 
-  const [editingId, setEditingId] = useState(null);
-
   const [filterType, setFilterType] = useState("all");
   const [filterCategory, setFilterCategory] = useState("all");
+
+  const [editingId, setEditingId] = useState(null);
 
   const [monthlyBudget, setMonthlyBudget] = useState(0);
   const [budgetInput, setBudgetInput] = useState("");
@@ -53,31 +48,29 @@ function App() {
       setLoading(true);
       setError("");
 
-      const [transactionsResponse, budgetResponse] =
-        await Promise.all([
-          fetch(API_URL),
-          fetch(BUDGET_URL),
-        ]);
+      const [transactionsResponse, budgetResponse] = await Promise.all([
+        fetch(API_URL),
+        fetch(BUDGET_URL),
+      ]);
 
       if (!transactionsResponse.ok) {
-        throw new Error("Failed to load transactions");
+        throw new Error("Failed to load transactions.");
       }
 
       if (!budgetResponse.ok) {
-        throw new Error("Failed to load budget");
+        throw new Error("Failed to load budget.");
       }
 
       const transactionsData = await transactionsResponse.json();
       const budgetData = await budgetResponse.json();
 
       setTransactions(transactionsData);
-
-      const savedBudget = Number(budgetData.amount) || 0;
-
-      setMonthlyBudget(savedBudget);
-      setBudgetInput(savedBudget > 0 ? String(savedBudget) : "");
+      setMonthlyBudget(Number(budgetData.amount) || 0);
+      setBudgetInput(
+        budgetData.amount ? String(budgetData.amount) : ""
+      );
     } catch (err) {
-      setError("Could not connect to the backend.");
+      setError(err.message || "Something went wrong.");
     } finally {
       setLoading(false);
     }
@@ -93,8 +86,6 @@ function App() {
   }
 
   function startEditing(transaction) {
-    setError("");
-
     setEditingId(transaction.id);
     setType(transaction.type);
     setDescription(transaction.description);
@@ -102,49 +93,30 @@ function App() {
     setCategory(transaction.category);
     setDate(transaction.date);
 
-    document
-      .getElementById("transaction-form")
-      ?.scrollIntoView({
-        behavior: "smooth",
-        block: "center",
-      });
+    window.setTimeout(() => {
+      document
+        .getElementById("transaction-form")
+        ?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+    }, 50);
   }
 
   function cancelEditing() {
     resetTransactionForm();
-    setError("");
   }
 
   async function handleSubmit(event) {
     event.preventDefault();
-    setError("");
-
-    if (!description.trim()) {
-      setError("Please enter a description.");
-      return;
-    }
-
-    if (!amount || Number(amount) <= 0) {
-      setError("Please enter an amount greater than zero.");
-      return;
-    }
-
-    if (!category) {
-      setError("Please select a category.");
-      return;
-    }
-
-    if (!date) {
-      setError("Please select a date.");
-      return;
-    }
 
     try {
       setSubmitting(true);
+      setError("");
 
       const transactionData = {
         type,
-        description: description.trim(),
+        description,
         amount: Number(amount),
         category,
         date,
@@ -167,70 +139,81 @@ function App() {
 
       if (!response.ok) {
         throw new Error(
-          data.error ||
-            (isEditing
-              ? "Failed to update transaction"
-              : "Failed to add transaction")
+          data.error || "Failed to save transaction."
         );
       }
 
       if (isEditing) {
-        setTransactions((current) =>
-          current.map((transaction) =>
+        setTransactions((currentTransactions) =>
+          currentTransactions.map((transaction) =>
             transaction.id === editingId ? data : transaction
           )
         );
       } else {
-        setTransactions((current) => [data, ...current]);
+        setTransactions((currentTransactions) => [
+          data,
+          ...currentTransactions,
+        ]);
       }
 
       resetTransactionForm();
     } catch (err) {
-      setError(err.message);
+      setError(err.message || "Failed to save transaction.");
     } finally {
       setSubmitting(false);
     }
   }
 
-  async function handleDelete(id) {
+  async function handleDelete(transactionId) {
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this transaction?"
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
     try {
       setError("");
 
-      const response = await fetch(`${API_URL}/${id}`, {
+      const response = await fetch(`${API_URL}/${transactionId}`, {
         method: "DELETE",
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "Failed to delete transaction");
+        throw new Error(
+          data.error || "Failed to delete transaction."
+        );
       }
 
-      setTransactions((current) =>
-        current.filter((transaction) => transaction.id !== id)
+      setTransactions((currentTransactions) =>
+        currentTransactions.filter(
+          (transaction) => transaction.id !== transactionId
+        )
       );
 
-      if (editingId === id) {
+      if (editingId === transactionId) {
         resetTransactionForm();
       }
     } catch (err) {
-      setError(err.message);
+      setError(err.message || "Failed to delete transaction.");
     }
   }
 
   async function handleBudgetSave(event) {
     event.preventDefault();
-    setBudgetError("");
-
-    const newBudget = Number(budgetInput);
-
-    if (!Number.isFinite(newBudget) || newBudget < 0) {
-      setBudgetError("Please enter a valid budget amount.");
-      return;
-    }
 
     try {
       setSavingBudget(true);
+      setBudgetError("");
+
+      const value = Number(budgetInput);
+
+      if (!Number.isFinite(value) || value < 0) {
+        throw new Error("Please enter a valid budget amount.");
+      }
 
       const response = await fetch(BUDGET_URL, {
         method: "PUT",
@@ -238,82 +221,28 @@ function App() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          amount: newBudget,
+          amount: value,
         }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "Failed to update budget");
+        throw new Error(
+          data.error || "Failed to update budget."
+        );
       }
 
-      const savedBudget = Number(data.amount) || 0;
-
-      setMonthlyBudget(savedBudget);
-      setBudgetInput(String(savedBudget));
-      setBudgetError("");
+      setMonthlyBudget(Number(data.amount) || 0);
+      setBudgetInput(String(data.amount));
     } catch (err) {
-      setBudgetError(err.message);
+      setBudgetError(
+        err.message || "Failed to update budget."
+      );
     } finally {
       setSavingBudget(false);
     }
   }
-
-  function formatCurrency(value) {
-    return new Intl.NumberFormat("en-KE", {
-      style: "currency",
-      currency: "KES",
-      maximumFractionDigits: 0,
-    }).format(value);
-  }
-
-  function getCategoryDetails(transactionCategory) {
-    return (
-      categories.find((item) => item.name === transactionCategory) || {
-        name: transactionCategory,
-        icon: "•••",
-        className: "category-other",
-      }
-    );
-  }
-
-  const totalIncome = transactions
-    .filter((transaction) => transaction.type === "income")
-    .reduce((total, transaction) => total + Number(transaction.amount), 0);
-
-  const totalExpenses = transactions
-    .filter((transaction) => transaction.type === "expense")
-    .reduce((total, transaction) => total + Number(transaction.amount), 0);
-
-  const balance = totalIncome - totalExpenses;
-
-  const budgetRemaining = monthlyBudget - totalExpenses;
-
-  const budgetPercentage =
-    monthlyBudget > 0
-      ? Math.min((totalExpenses / monthlyBudget) * 100, 100)
-      : 0;
-
-  const categoryTotals = categories
-    .map((item) => {
-      const total = transactions
-        .filter(
-          (transaction) =>
-            transaction.type === "expense" &&
-            transaction.category === item.name
-        )
-        .reduce((sum, transaction) => sum + Number(transaction.amount), 0);
-
-      return {
-        ...item,
-        total,
-      };
-    })
-    .filter((item) => item.total > 0)
-    .sort((a, b) => b.total - a.total);
-
-  const largestCategory = categoryTotals[0];
 
   const filteredTransactions = transactions.filter((transaction) => {
     const matchesType =
@@ -326,321 +255,331 @@ function App() {
     return matchesType && matchesCategory;
   });
 
+  const totalIncome = transactions
+    .filter((transaction) => transaction.type === "income")
+    .reduce(
+      (total, transaction) => total + Number(transaction.amount),
+      0
+    );
+
+  const totalExpenses = transactions
+    .filter((transaction) => transaction.type === "expense")
+    .reduce(
+      (total, transaction) => total + Number(transaction.amount),
+      0
+    );
+
+  const balance = totalIncome - totalExpenses;
+
+  // Calculate expenses for the current month only.
+  const currentDate = new Date();
+  const currentYear = currentDate.getFullYear();
+  const currentMonth = currentDate.getMonth();
+
+  const monthlyExpenses = transactions
+    .filter((transaction) => {
+      if (transaction.type !== "expense" || !transaction.date) {
+        return false;
+      }
+
+      const transactionDate = new Date(
+        `${transaction.date}T00:00:00`
+      );
+
+      return (
+        transactionDate.getFullYear() === currentYear &&
+        transactionDate.getMonth() === currentMonth
+      );
+    })
+    .reduce(
+      (total, transaction) => total + Number(transaction.amount),
+      0
+    );
+
+  const budgetRemaining = monthlyBudget - monthlyExpenses;
+
+  const budgetPercentage =
+    monthlyBudget > 0
+      ? Math.min(
+          (monthlyExpenses / monthlyBudget) * 100,
+          100
+        )
+      : 0;
+
+  const categoryTotals = categories.map((item) => {
+    const total = transactions
+      .filter(
+        (transaction) =>
+          transaction.type === "expense" &&
+          transaction.category === item.name
+      )
+      .reduce(
+        (sum, transaction) => sum + Number(transaction.amount),
+        0
+      );
+
+    return {
+      ...item,
+      total,
+    };
+  });
+
+  const largestCategory = [...categoryTotals].sort(
+    (a, b) => b.total - a.total
+  )[0];
+
+  function formatCurrency(value) {
+    return new Intl.NumberFormat("en-KE", {
+      style: "currency",
+      currency: "KES",
+      maximumFractionDigits: 0,
+    }).format(value);
+  }
+
+  function getCategoryDetails(categoryName) {
+    return (
+      categories.find((item) => item.name === categoryName) || {
+        name: categoryName,
+        icon: "•••",
+      }
+    );
+  }
+
   return (
     <div className="app-shell">
-      <header className="top-navigation">
-        <div className="brand-area">
+      <nav className="top-navigation">
+        <div className="brand">
           <div className="brand-mark">S</div>
-
           <div>
-            <h1>SmartSpend</h1>
-            <span>Personal finance</span>
+            <strong>Smart Expense</strong>
+            <span>Personal finance dashboard</span>
           </div>
         </div>
 
-        <nav className="main-navigation">
-          <a href="#dashboard" className="nav-link active">
-            Dashboard
-          </a>
-
-          <a href="#transactions" className="nav-link">
-            Transactions
-          </a>
-
-          <a href="#budget" className="nav-link">
-            Budget
-          </a>
-
-          <a href="#insights" className="nav-link">
-            Insights
-          </a>
-        </nav>
-
-        <div className="profile-area">
-          <div className="notification-button">⌁</div>
-
-          <div className="profile-avatar">CO</div>
-
-          <div className="profile-details">
-            <strong>Clyde</strong>
-            <span>Personal account</span>
-          </div>
+        <div className="nav-status">
+          <span className="status-dot"></span>
+          Finance overview
         </div>
-      </header>
+      </nav>
 
-      <main className="dashboard-container" id="dashboard">
-        <section className="dashboard-hero">
+      <main className="dashboard-container">
+        <section className="hero-section">
           <div>
-            <p className="eyebrow">FINANCIAL OVERVIEW</p>
-
-            <h2>
-              Good to see you,
-              <br />
-              <span>Clyde.</span>
-            </h2>
-
+            <p className="section-kicker">YOUR MONEY AT A GLANCE</p>
+            <h1>Take control of your money.</h1>
             <p className="hero-description">
-              Keep track of your money and make every shilling count.
+              Track your spending, manage your budget, and
+              understand where your money goes.
             </p>
           </div>
 
           <div className="hero-date">
             <span>Today</span>
             <strong>
-              {new Date().toLocaleDateString("en-US", {
+              {new Intl.DateTimeFormat("en-US", {
                 month: "short",
                 day: "numeric",
                 year: "numeric",
-              })}
+              }).format(new Date())}
             </strong>
           </div>
         </section>
 
-        <section className="balance-card">
-          <div className="balance-card-top">
-            <div>
-              <span className="balance-label">TOTAL BALANCE</span>
-              <h3>{formatCurrency(balance)}</h3>
-            </div>
-
-            <div className="balance-badge">
-              {balance >= 0 ? "Positive balance" : "Review balance"}
-            </div>
+        {error && (
+          <div className="alert-message">
+            {error}
           </div>
+        )}
 
-          <div className="balance-footer">
-            <div>
-              <span>Income</span>
-
-              <strong className="income-text">
-                +{formatCurrency(totalIncome)}
-              </strong>
+        <section className="summary-grid">
+          <article className="financial-summary-card balance-card">
+            <div className="financial-summary-header">
+              <div>
+                <span className="summary-label">Balance</span>
+                <h2>{formatCurrency(balance)}</h2>
+              </div>
+              <span className="summary-icon">◈</span>
             </div>
 
-            <div>
-              <span>Expenses</span>
-
-              <strong className="expense-text">
-                -{formatCurrency(totalExpenses)}
-              </strong>
-            </div>
-          </div>
-        </section>
-
-        <section className="statistics-grid">
-          <article className="stat-card">
-            <div className="stat-icon income-icon">↗</div>
-
-            <div>
-              <span>Total income</span>
-              <strong>{formatCurrency(totalIncome)}</strong>
-            </div>
+            <p className="summary-note">
+              Income minus all recorded expenses
+            </p>
           </article>
 
-          <article className="stat-card">
-            <div className="stat-icon expense-icon">↘</div>
-
-            <div>
-              <span>Total expenses</span>
-              <strong>{formatCurrency(totalExpenses)}</strong>
+          <article className="financial-summary-card income-card">
+            <div className="financial-summary-header">
+              <div>
+                <span className="summary-label">Total income</span>
+                <h2>{formatCurrency(totalIncome)}</h2>
+              </div>
+              <span className="summary-icon">↗</span>
             </div>
+
+            <p className="summary-note">
+              All income recorded so far
+            </p>
           </article>
 
-          <article className="stat-card">
-            <div className="stat-icon budget-icon">◎</div>
-
-            <div>
-              <span>Budget remaining</span>
-              <strong>{formatCurrency(budgetRemaining)}</strong>
+          <article className="financial-summary-card expense-card">
+            <div className="financial-summary-header">
+              <div>
+                <span className="summary-label">Total expenses</span>
+                <h2>{formatCurrency(totalExpenses)}</h2>
+              </div>
+              <span className="summary-icon">↘</span>
             </div>
-          </article>
 
-          <article className="stat-card">
-            <div className="stat-icon transaction-icon-stat">#</div>
-
-            <div>
-              <span>Transactions</span>
-              <strong>{transactions.length}</strong>
-            </div>
+            <p className="summary-note">
+              All expenses recorded so far
+            </p>
           </article>
         </section>
 
-        <section className="financial-summary-card">
-          <div className="financial-summary-header">
-            <div>
-              <p className="section-kicker">FINANCIAL SUMMARY</p>
-              <h3>Your money at a glance</h3>
-            </div>
-
-            <div className="summary-period">Current overview</div>
-          </div>
-
-          <div className="summary-grid">
-            <div className="summary-item">
-              <div className="summary-item-header">
-                <span>Income</span>
-                <span className="summary-dot income-dot"></span>
-              </div>
-
-              <strong className="income-text">
-                {formatCurrency(totalIncome)}
-              </strong>
-
-              <div className="summary-bar">
-                <div
-                  className="summary-bar-fill income-summary-fill"
-                  style={{
-                    width:
-                      totalIncome > 0
-                        ? `${Math.min(
-                            (totalIncome /
-                              Math.max(totalIncome, totalExpenses, 1)) *
-                              100,
-                            100
-                          )}%`
-                        : "0%",
-                  }}
-                />
-              </div>
-            </div>
-
-            <div className="summary-item">
-              <div className="summary-item-header">
-                <span>Expenses</span>
-                <span className="summary-dot expense-dot"></span>
-              </div>
-
-              <strong className="expense-text">
-                {formatCurrency(totalExpenses)}
-              </strong>
-
-              <div className="summary-bar">
-                <div
-                  className="summary-bar-fill expense-summary-fill"
-                  style={{
-                    width:
-                      totalExpenses > 0
-                        ? `${Math.min(
-                            (totalExpenses /
-                              Math.max(totalIncome, totalExpenses, 1)) *
-                              100,
-                            100
-                          )}%`
-                        : "0%",
-                  }}
-                />
-              </div>
-            </div>
-
-            <div className="summary-item summary-balance">
-              <div className="summary-item-header">
-                <span>Net position</span>
-                <span className="summary-dot balance-dot"></span>
-              </div>
-
-              <strong>{formatCurrency(balance)}</strong>
-
-              <p>
-                {balance >= 0
-                  ? "Your income is currently higher than your expenses."
-                  : "Your expenses are currently higher than your income."}
-              </p>
-            </div>
-          </div>
-        </section>
-
-        <section className="dashboard-columns">
-          <div className="dashboard-main-column">
-            <section className="dashboard-card spending-card">
-              <div className="section-heading">
+        <section className="dashboard-layout">
+          <div className="main-column">
+            <section
+              className="dashboard-card transaction-form-card"
+              id="transaction-form"
+            >
+              <div className="card-heading">
                 <div>
-                  <p className="section-kicker">SPENDING</p>
-                  <h3>Where your money goes</h3>
+                  <p className="section-kicker">
+                    {editingId !== null
+                      ? "UPDATE TRANSACTION"
+                      : "ADD TRANSACTION"}
+                  </p>
+
+                  <h2>
+                    {editingId !== null
+                      ? "Edit your transaction"
+                      : "Record your money movement"}
+                  </h2>
                 </div>
 
-                {largestCategory && (
-                  <div className="category-highlight">
-                    <span>{largestCategory.icon}</span>
-
-                    <div>
-                      <small>Highest category</small>
-                      <strong>{largestCategory.name}</strong>
-                    </div>
-                  </div>
+                {editingId !== null && (
+                  <button
+                    className="secondary-button"
+                    type="button"
+                    onClick={cancelEditing}
+                  >
+                    Cancel
+                  </button>
                 )}
               </div>
 
-              {categoryTotals.length === 0 ? (
-                <div className="empty-state">
-                  <div className="empty-icon">◎</div>
+              <form onSubmit={handleSubmit}>
+                <div className="form-grid">
+                  <label>
+                    Type
+                    <select
+                      value={type}
+                      onChange={(event) =>
+                        setType(event.target.value)
+                      }
+                    >
+                      <option value="expense">Expense</option>
+                      <option value="income">Income</option>
+                    </select>
+                  </label>
 
-                  <h4>No spending data yet</h4>
+                  <label>
+                    Description
+                    <input
+                      type="text"
+                      value={description}
+                      onChange={(event) =>
+                        setDescription(event.target.value)
+                      }
+                      placeholder="e.g. Groceries"
+                      required
+                    />
+                  </label>
 
-                  <p>
-                    Add an expense to start seeing your spending breakdown.
-                  </p>
+                  <label>
+                    Amount
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={amount}
+                      onChange={(event) =>
+                        setAmount(event.target.value)
+                      }
+                      placeholder="0"
+                      required
+                    />
+                  </label>
+
+                  <label>
+                    Category
+                    <select
+                      value={category}
+                      onChange={(event) =>
+                        setCategory(event.target.value)
+                      }
+                    >
+                      {categories.map((item) => (
+                        <option
+                          key={item.name}
+                          value={item.name}
+                        >
+                          {item.name}
+                        </option>
+                      ))}
+
+                      <option value="Salary">Salary</option>
+                    </select>
+                  </label>
+
+                  <label>
+                    Date
+                    <input
+                      type="date"
+                      value={date}
+                      onChange={(event) =>
+                        setDate(event.target.value)
+                      }
+                      required
+                    />
+                  </label>
                 </div>
-              ) : (
-                <div className="category-list">
-                  {categoryTotals.map((item) => {
-                    const percentage =
-                      totalExpenses > 0
-                        ? (item.total / totalExpenses) * 100
-                        : 0;
 
-                    return (
-                      <div className="category-row" key={item.name}>
-                        <div className="category-row-top">
-                          <div className="category-name">
-                            <span
-                              className={`category-icon ${item.className}`}
-                            >
-                              {item.icon}
-                            </span>
-
-                            <strong>{item.name}</strong>
-                          </div>
-
-                          <div className="category-amount">
-                            <strong>{formatCurrency(item.total)}</strong>
-                            <span>{Math.round(percentage)}%</span>
-                          </div>
-                        </div>
-
-                        <div className="progress-track">
-                          <div
-                            className="progress-fill"
-                            style={{
-                              width: `${percentage}%`,
-                            }}
-                          />
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
+                <button
+                  className="primary-button"
+                  type="submit"
+                  disabled={submitting}
+                >
+                  {submitting
+                    ? editingId !== null
+                      ? "Updating..."
+                      : "Saving..."
+                    : editingId !== null
+                    ? "Update transaction"
+                    : "Add transaction"}
+                </button>
+              </form>
             </section>
 
-            <section
-              className="dashboard-card transactions-card"
-              id="transactions"
-            >
-              <div className="section-heading">
+            <section className="dashboard-card transactions-card">
+              <div className="card-heading">
                 <div>
-                  <p className="section-kicker">ACTIVITY</p>
-                  <h3>Recent transactions</h3>
+                  <p className="section-kicker">
+                    TRANSACTION HISTORY
+                  </p>
+                  <h2>Your transactions</h2>
                 </div>
 
                 <span className="transaction-count">
-                  {filteredTransactions.length} shown
+                  {filteredTransactions.length}
                 </span>
               </div>
 
               <div className="filter-bar">
                 <select
                   value={filterType}
-                  onChange={(event) => setFilterType(event.target.value)}
+                  onChange={(event) =>
+                    setFilterType(event.target.value)
+                  }
                 >
                   <option value="all">All types</option>
                   <option value="income">Income</option>
@@ -656,102 +595,91 @@ function App() {
                   <option value="all">All categories</option>
 
                   {categories.map((item) => (
-                    <option value={item.name} key={item.name}>
+                    <option
+                      key={item.name}
+                      value={item.name}
+                    >
                       {item.name}
                     </option>
                   ))}
+
+                  <option value="Salary">Salary</option>
                 </select>
               </div>
 
               {loading ? (
-                <div className="status-message">
-                  Loading transactions...
+                <div className="empty-state">
+                  <strong>Loading transactions...</strong>
+                  <p>
+                    Please wait while your financial data loads.
+                  </p>
                 </div>
               ) : filteredTransactions.length === 0 ? (
-                <div className="empty-state small-empty">
-                  <div className="empty-icon">○</div>
-
-                  <h4>No transactions found</h4>
-
+                <div className="empty-state">
+                  <strong>No transactions found.</strong>
                   <p>
-                    Try changing your filters or add a new transaction.
+                    Add a transaction or change your filters.
                   </p>
                 </div>
               ) : (
                 <div className="transaction-list">
                   {filteredTransactions.map((transaction) => {
-                    const categoryDetails = getCategoryDetails(
-                      transaction.category
-                    );
+                    const categoryDetails =
+                      getCategoryDetails(
+                        transaction.category
+                      );
 
                     return (
                       <article
-                        className={`modern-transaction ${
-                          transaction.type === "income"
-                            ? "transaction-income"
-                            : "transaction-expense"
-                        }`}
+                        className="transaction-row"
                         key={transaction.id}
                       >
-                        <div
-                          className={`transaction-icon ${categoryDetails.className}`}
-                        >
+                        <div className="transaction-icon">
                           {categoryDetails.icon}
                         </div>
 
-                        <div className="transaction-information">
-                          <div className="transaction-title-row">
-                            <h4>{transaction.description}</h4>
-
-                            <span
-                              className={`transaction-type-badge ${
-                                transaction.type === "income"
-                                  ? "income-badge"
-                                  : "expense-badge"
-                              }`}
-                            >
-                              {transaction.type === "income"
-                                ? "Income"
-                                : "Expense"}
-                            </span>
-                          </div>
-
-                          <div className="transaction-meta">
-                            <span>{transaction.category}</span>
-                            <span>•</span>
-                            <span>{transaction.date}</span>
-                          </div>
-                        </div>
-
-                        <div className="transaction-value">
-                          <strong
-                            className={
-                              transaction.type === "income"
-                                ? "income-text"
-                                : "expense-text"
-                            }
-                          >
-                            {transaction.type === "income" ? "+" : "-"}
-                            {formatCurrency(Number(transaction.amount))}
+                        <div className="transaction-details">
+                          <strong>
+                            {transaction.description}
                           </strong>
 
-                          <div className="transaction-actions">
-                            <button
-                              className="edit-button"
-                              type="button"
-                              onClick={() => startEditing(transaction)}
-                            >
-                              Edit
-                            </button>
+                          <span>
+                            {transaction.category} ·{" "}
+                            {transaction.date}
+                          </span>
+                        </div>
 
-                            <button
-                              className="delete-button"
-                              type="button"
-                              onClick={() => handleDelete(transaction.id)}
-                            >
-                              Delete
-                            </button>
-                          </div>
+                        <strong
+                          className={`transaction-amount ${transaction.type}`}
+                        >
+                          {transaction.type === "income"
+                            ? "+"
+                            : "-"}
+                          {formatCurrency(
+                            Number(transaction.amount)
+                          )}
+                        </strong>
+
+                        <div className="transaction-actions">
+                          <button
+                            className="edit-button"
+                            type="button"
+                            onClick={() =>
+                              startEditing(transaction)
+                            }
+                          >
+                            Edit
+                          </button>
+
+                          <button
+                            className="delete-button"
+                            type="button"
+                            onClick={() =>
+                              handleDelete(transaction.id)
+                            }
+                          >
+                            Delete
+                          </button>
                         </div>
                       </article>
                     );
@@ -761,228 +689,168 @@ function App() {
             </section>
           </div>
 
-          <aside className="dashboard-side-column">
-            <section className="dashboard-card budget-card" id="budget">
-              <div className="section-heading">
+          <aside className="side-column">
+            <section className="dashboard-card budget-card">
+              <div className="card-heading">
                 <div>
-                  <p className="section-kicker">MONTHLY PLAN</p>
-                  <h3>Budget</h3>
+                  <p className="section-kicker">
+                    MONTHLY PLAN
+                  </p>
+                  <h2>Monthly budget</h2>
                 </div>
 
-                <span className="budget-symbol">◎</span>
+                <span className="budget-icon">◎</span>
               </div>
 
-              <div className="budget-amount">
-                <span>Monthly limit</span>
-                <strong>{formatCurrency(monthlyBudget)}</strong>
-              </div>
-
-              <div className="budget-progress">
-                <div className="budget-progress-header">
-                  <span>Spent</span>
-                  <strong>{Math.round(budgetPercentage)}%</strong>
-                </div>
-
-                <div className="progress-track">
-                  <div
-                    className="progress-fill budget-fill"
-                    style={{
-                      width: `${budgetPercentage}%`,
-                    }}
-                  />
-                </div>
-              </div>
-
-              <div className="budget-summary">
-                <div>
-                  <span>Spent</span>
-                  <strong>{formatCurrency(totalExpenses)}</strong>
-                </div>
-
-                <div>
-                  <span>Remaining</span>
-                  <strong>{formatCurrency(budgetRemaining)}</strong>
-                </div>
-              </div>
-
-              <form
-                className="budget-form"
-                onSubmit={handleBudgetSave}
-              >
+              <form onSubmit={handleBudgetSave}>
                 <label className="budget-input-label">
-                  Adjust monthly budget
-
-                  <input
-                    type="number"
-                    min="0"
-                    step="1"
-                    placeholder="Enter budget"
-                    value={budgetInput}
-                    onChange={(event) =>
-                      setBudgetInput(event.target.value)
-                    }
-                  />
+                  Set monthly budget
+                  <div className="budget-input-wrapper">
+                    <span>KES</span>
+                    <input
+                      type="number"
+                      min="0"
+                      step="100"
+                      value={budgetInput}
+                      onChange={(event) =>
+                        setBudgetInput(event.target.value)
+                      }
+                      placeholder="50000"
+                    />
+                  </div>
                 </label>
 
                 <button
-                  className="submit-button budget-save-button"
+                  className="primary-button"
                   type="submit"
                   disabled={savingBudget}
                 >
-                  {savingBudget ? "Saving..." : "Save budget"}
+                  {savingBudget
+                    ? "Saving..."
+                    : "Save budget"}
                 </button>
               </form>
 
               {budgetError && (
-                <div className="error-message">{budgetError}</div>
+                <p className="form-error">
+                  {budgetError}
+                </p>
               )}
+
+              <div className="budget-overview">
+                <div>
+                  <span>Spent this month</span>
+                  <strong>
+                    {formatCurrency(monthlyExpenses)}
+                  </strong>
+                </div>
+
+                <div>
+                  <span>Remaining</span>
+                  <strong
+                    className={
+                      budgetRemaining < 0
+                        ? "negative-value"
+                        : ""
+                    }
+                  >
+                    {formatCurrency(budgetRemaining)}
+                  </strong>
+                </div>
+              </div>
+
+              <div className="progress-track">
+                <div
+                  className="progress-fill"
+                  style={{
+                    width: `${budgetPercentage}%`,
+                  }}
+                ></div>
+              </div>
+
+              <div className="budget-progress-label">
+                <span>
+                  {Math.round(budgetPercentage)}% used
+                </span>
+
+                {monthlyBudget > 0 &&
+                  monthlyExpenses > monthlyBudget && (
+                    <span className="over-budget">
+                      Over budget
+                    </span>
+                  )}
+              </div>
             </section>
 
-            <section className="dashboard-card insight-card" id="insights">
-              <div className="insight-symbol">✦</div>
-
-              <p className="section-kicker">QUICK INSIGHT</p>
-
-              {largestCategory ? (
-                <>
-                  <h3>
-                    {largestCategory.name} is your biggest spending
-                    category.
-                  </h3>
-
-                  <p>
-                    You have spent{" "}
-                    <strong>
-                      {formatCurrency(largestCategory.total)}
-                    </strong>{" "}
-                    on {largestCategory.name} so far.
+            <section className="dashboard-card category-card">
+              <div className="card-heading">
+                <div>
+                  <p className="section-kicker">
+                    SPENDING BREAKDOWN
                   </p>
-                </>
-              ) : (
-                <>
-                  <h3>Your financial picture starts here.</h3>
+                  <h2>Where your money goes</h2>
+                </div>
+              </div>
 
+              <div className="category-list">
+                {categoryTotals.map((item) => {
+                  const percentage =
+                    totalExpenses > 0
+                      ? (item.total / totalExpenses) * 100
+                      : 0;
+
+                  return (
+                    <div
+                      className="category-item"
+                      key={item.name}
+                    >
+                      <div className="category-item-top">
+                        <span>
+                          {item.icon} {item.name}
+                        </span>
+
+                        <strong>
+                          {formatCurrency(item.total)}
+                        </strong>
+                      </div>
+
+                      <div className="category-progress">
+                        <div
+                          style={{
+                            width: `${percentage}%`,
+                          }}
+                        ></div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+
+            <section className="insight-card">
+              <span className="insight-icon">✦</span>
+
+              <div>
+                <p className="section-kicker">QUICK INSIGHT</p>
+
+                <h3>
+                  {largestCategory?.total > 0
+                    ? `${largestCategory.name} is your biggest spending category.`
+                    : "Start adding transactions to see your spending insights."}
+                </h3>
+
+                {largestCategory?.total > 0 && (
                   <p>
-                    Add a few transactions and SmartSpend will begin
-                    showing useful spending insights.
+                    You have recorded{" "}
+                    {formatCurrency(
+                      largestCategory.total
+                    )}{" "}
+                    in {largestCategory.name} expenses.
                   </p>
-                </>
-              )}
+                )}
+              </div>
             </section>
           </aside>
-        </section>
-
-        <section className="dashboard-card add-transaction-card">
-          <div className="section-heading">
-            <div>
-              <p className="section-kicker">
-                {editingId !== null ? "EDIT TRANSACTION" : "QUICK ACTION"}
-              </p>
-
-              <h3>
-                {editingId !== null
-                  ? "Update transaction"
-                  : "Add transaction"}
-              </h3>
-            </div>
-
-            {editingId !== null && (
-              <button
-                className="cancel-edit-button"
-                type="button"
-                onClick={cancelEditing}
-              >
-                Cancel editing
-              </button>
-            )}
-          </div>
-
-          {error && <div className="error-message">{error}</div>}
-
-          <form
-            className="transaction-form"
-            id="transaction-form"
-            onSubmit={handleSubmit}
-          >
-            <div className="form-group">
-              <label>Type</label>
-
-              <select
-                value={type}
-                onChange={(event) => setType(event.target.value)}
-              >
-                <option value="expense">Expense</option>
-                <option value="income">Income</option>
-              </select>
-            </div>
-
-            <div className="form-group">
-              <label>Description</label>
-
-              <input
-                type="text"
-                placeholder="e.g. Groceries"
-                value={description}
-                onChange={(event) =>
-                  setDescription(event.target.value)
-                }
-              />
-            </div>
-
-            <div className="form-group">
-              <label>Amount</label>
-
-              <input
-                type="number"
-                min="0"
-                step="0.01"
-                placeholder="0"
-                value={amount}
-                onChange={(event) => setAmount(event.target.value)}
-              />
-            </div>
-
-            <div className="form-group">
-              <label>Category</label>
-
-              <select
-                value={category}
-                onChange={(event) => setCategory(event.target.value)}
-              >
-                {categories.map((item) => (
-                  <option value={item.name} key={item.name}>
-                    {item.name}
-                  </option>
-                ))}
-
-                <option value="Salary">Salary</option>
-              </select>
-            </div>
-
-            <div className="form-group">
-              <label>Date</label>
-
-              <input
-                type="date"
-                value={date}
-                onChange={(event) => setDate(event.target.value)}
-              />
-            </div>
-
-            <button
-              className="submit-button"
-              type="submit"
-              disabled={submitting}
-            >
-              {submitting
-                ? editingId !== null
-                  ? "Updating..."
-                  : "Adding..."
-                : editingId !== null
-                ? "Update transaction"
-                : "Add transaction"}
-            </button>
-          </form>
         </section>
       </main>
     </div>
