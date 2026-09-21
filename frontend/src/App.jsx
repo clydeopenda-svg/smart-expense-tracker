@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-const API_BASE_URL = "http://127.0.0.1:5000/api";
+const API_BASE_URL = "/api";
 const API_URL = `${API_BASE_URL}/transactions`;
 const BUDGET_URL = `${API_BASE_URL}/budget`;
 
