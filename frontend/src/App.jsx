@@ -1520,8 +1520,17 @@ function App() {
                 )}
               </div>
             </section>
-          </aside>
+                    </aside>
         </section>
+
+        <footer className="site-footer">
+          <p>© 2026 Smart Expense Tracker</p>
+
+          <nav aria-label="Legal">
+            <a href="/privacy.html">Privacy Policy</a>
+            <a href="/terms.html">Terms & Conditions</a>
+          </nav>
+        </footer>
       </main>
     </div>
   );
