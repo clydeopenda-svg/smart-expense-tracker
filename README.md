@@ -229,6 +229,14 @@ Transaction and budget information is stored using SQLite during local developme
 
 The application is intended as a personal finance tracking tool. Users should maintain appropriate backups and should not treat the application as a replacement for official financial records.
 
+## Deployment Notes
+
+The current backend uses a local SQLite database for development and demonstration purposes.
+
+Before using the application as a production service for multiple users, the database layer should be migrated to a persistent hosted database appropriate for the deployment environment.
+
+The current deployment configuration is intended to demonstrate the full-stack application and its frontend/backend integration rather than provide production-grade persistent database infrastructure.
+
 ## Financial Disclaimer
 
 Smart Expense Tracker is a tracking and organization tool. It does not provide financial, investment, tax, accounting, or legal advice.
