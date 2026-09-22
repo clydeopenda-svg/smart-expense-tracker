@@ -4,6 +4,8 @@ const API_BASE_URL = "/api";
 const API_URL = `${API_BASE_URL}/transactions`;
 const BUDGET_URL = `${API_BASE_URL}/budget`;
 
+// Reusable SVG icons keep the interface consistent without
+// relying on emoji or external icon libraries.
 function Icon({ name, size = 20 }) {
   const commonProps = {
     width: size,
@@ -26,6 +28,7 @@ function Icon({ name, size = 20 }) {
         <path d="M17 3c2 1.5 3 3.5 3 6v2h-3" />
       </svg>
     ),
+
     transport: (
       <svg {...commonProps}>
         <path d="M5 17h14l-1-8H6l-1 8Z" />
@@ -34,23 +37,27 @@ function Icon({ name, size = 20 }) {
         <circle cx="16" cy="17" r="1.5" />
       </svg>
     ),
+
     bills: (
       <svg {...commonProps}>
         <path d="M13 2 5 13h6l-1 9 8-11h-6l1-9Z" />
       </svg>
     ),
+
     shopping: (
       <svg {...commonProps}>
         <path d="M5 8h14l-1 12H6L5 8Z" />
         <path d="M9 8V6a3 3 0 0 1 6 0v2" />
       </svg>
     ),
+
     entertainment: (
       <svg {...commonProps}>
         <rect x="3" y="5" width="18" height="14" rx="2" />
         <path d="m10 9 5 3-5 3V9Z" />
       </svg>
     ),
+
     health: (
       <svg {...commonProps}>
         <path d="M12 20s-7-4.35-7-10a4 4 0 0 1 7-2.65A4 4 0 0 1 19 10c0 5.65-7 10-7 10Z" />
@@ -58,6 +65,7 @@ function Icon({ name, size = 20 }) {
         <path d="M9 11h6" />
       </svg>
     ),
+
     education: (
       <svg {...commonProps}>
         <path d="m3 9 9-5 9 5-9 5-9-5Z" />
@@ -65,6 +73,7 @@ function Icon({ name, size = 20 }) {
         <path d="M21 9v6" />
       </svg>
     ),
+
     other: (
       <svg {...commonProps}>
         <circle cx="5" cy="12" r="1" />
@@ -72,6 +81,7 @@ function Icon({ name, size = 20 }) {
         <circle cx="19" cy="12" r="1" />
       </svg>
     ),
+
     balance: (
       <svg {...commonProps}>
         <circle cx="12" cy="12" r="8.5" />
@@ -79,6 +89,7 @@ function Icon({ name, size = 20 }) {
         <path d="M15 9.5c-.7-.7-1.7-1-3-1-1.7 0-3 .8-3 2s1.3 2 3 2 3 .8 3 2-1.3 2-3 2c-1.3 0-2.3-.3-3-1" />
       </svg>
     ),
+
     income: (
       <svg {...commonProps}>
         <path d="M5 15 15 5" />
@@ -86,6 +97,7 @@ function Icon({ name, size = 20 }) {
         <path d="M19 19H5V5" />
       </svg>
     ),
+
     expense: (
       <svg {...commonProps}>
         <path d="M5 9 15 19" />
@@ -93,17 +105,20 @@ function Icon({ name, size = 20 }) {
         <path d="M19 5H5v14" />
       </svg>
     ),
+
     budget: (
       <svg {...commonProps}>
         <circle cx="12" cy="12" r="8.5" />
         <circle cx="12" cy="12" r="3" />
       </svg>
     ),
+
     insight: (
       <svg {...commonProps}>
         <path d="m12 3 1.4 5.6L19 10l-5.6 1.4L12 17l-1.4-5.6L5 10l5.6-1.4L12 3Z" />
       </svg>
     ),
+
     search: (
       <svg {...commonProps}>
         <circle cx="11" cy="11" r="6.5" />
@@ -129,6 +144,7 @@ const categories = [
 function App() {
   const [transactions, setTransactions] = useState([]);
 
+  // Transaction form state.
   const [type, setType] = useState("expense");
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState("");
@@ -137,6 +153,7 @@ function App() {
     new Date().toISOString().split("T")[0]
   );
 
+  // Transaction filtering state.
   const [filterType, setFilterType] = useState("all");
   const [filterCategory, setFilterCategory] = useState("all");
   const [filterStartDate, setFilterStartDate] = useState("");
@@ -145,6 +162,7 @@ function App() {
 
   const [editingId, setEditingId] = useState(null);
 
+  // Monthly budget state.
   const [monthlyBudget, setMonthlyBudget] = useState(0);
   const [budgetInput, setBudgetInput] = useState("");
   const [savingBudget, setSavingBudget] = useState(false);
@@ -414,6 +432,14 @@ function App() {
     }
   );
 
+  const hasActiveFilters =
+    searchTerm.trim() !== "" ||
+    filterType !== "all" ||
+    filterCategory !== "all" ||
+    filterStartDate !== "" ||
+    filterEndDate !== "";
+
+  // Calculate the overall income recorded in the application.
   const totalIncome = transactions
     .filter((transaction) => transaction.type === "income")
     .reduce(
@@ -422,6 +448,7 @@ function App() {
       0
     );
 
+  // Calculate all expenses recorded in the application.
   const totalExpenses = transactions
     .filter((transaction) => transaction.type === "expense")
     .reduce(
@@ -436,6 +463,8 @@ function App() {
   const currentYear = currentDate.getFullYear();
   const currentMonth = currentDate.getMonth();
 
+  // Only expenses from the current calendar month count
+  // toward the monthly budget.
   const monthlyExpenses = transactions
     .filter((transaction) => {
       if (
@@ -463,6 +492,9 @@ function App() {
   const budgetRemaining =
     monthlyBudget - monthlyExpenses;
 
+  // Calculate how much of the monthly budget has been used.
+  // The value is capped at 100 for the progress bar so
+  // the bar does not grow outside its container.
   const budgetPercentage =
     monthlyBudget > 0
       ? Math.min(
@@ -470,6 +502,36 @@ function App() {
           100
         )
       : 0;
+
+  // Create a clear text status for the current budget.
+  // This gives the user useful information even when the
+  // progress bar itself has reached 100%.
+  let budgetStatus = "No monthly budget set";
+  let budgetStatusDetail =
+    "Set a monthly budget to start tracking your spending limit.";
+
+  if (monthlyBudget > 0 && monthlyExpenses > monthlyBudget) {
+    const amountOverBudget =
+      monthlyExpenses - monthlyBudget;
+
+    budgetStatus = "Over budget";
+    budgetStatusDetail = `${formatCurrency(
+      amountOverBudget
+    )} over your monthly budget.`;
+  } else if (
+    monthlyBudget > 0 &&
+    budgetPercentage >= 80
+  ) {
+    budgetStatus = "Budget nearly used";
+    budgetStatusDetail = `${Math.round(
+      budgetPercentage
+    )}% of your monthly budget has been used.`;
+  } else if (monthlyBudget > 0) {
+    budgetStatus = "Within budget";
+    budgetStatusDetail = `${Math.round(
+      budgetPercentage
+    )}% of your monthly budget has been used.`;
+  }
 
   const categoryTotals = categories.map((item) => {
     const total = transactions
@@ -812,6 +874,7 @@ function App() {
                   onChange={(event) =>
                     setFilterType(event.target.value)
                   }
+                  aria-label="Filter by transaction type"
                 >
                   <option value="all">All types</option>
                   <option value="income">Income</option>
@@ -825,6 +888,7 @@ function App() {
                   onChange={(event) =>
                     setFilterCategory(event.target.value)
                   }
+                  aria-label="Filter by category"
                 >
                   <option value="all">
                     All categories
@@ -848,11 +912,13 @@ function App() {
                   <input
                     type="date"
                     value={filterStartDate}
+                    max={filterEndDate || undefined}
                     onChange={(event) =>
                       setFilterStartDate(
                         event.target.value
                       )
                     }
+                    aria-label="Filter transactions from date"
                   />
                 </label>
 
@@ -862,11 +928,13 @@ function App() {
                   <input
                     type="date"
                     value={filterEndDate}
+                    min={filterStartDate || undefined}
                     onChange={(event) =>
                       setFilterEndDate(
                         event.target.value
                       )
                     }
+                    aria-label="Filter transactions to date"
                   />
                 </label>
 
@@ -874,9 +942,16 @@ function App() {
                   className="clear-filters-button"
                   type="button"
                   onClick={resetFilters}
+                  disabled={!hasActiveFilters}
                 >
                   Clear filters
                 </button>
+              </div>
+
+              <div className="summary-note">
+                {hasActiveFilters
+                  ? `Showing ${filteredTransactions.length} of ${transactions.length} transactions`
+                  : `${transactions.length} transactions recorded`}
               </div>
 
               {loading ? (
@@ -893,15 +968,15 @@ function App() {
               ) : filteredTransactions.length === 0 ? (
                 <div className="empty-state">
                   <strong>
-                    {searchTerm
+                    {hasActiveFilters
                       ? "No matching transactions."
                       : "No transactions found."}
                   </strong>
 
                   <p>
-                    {searchTerm
-                      ? "Try a different search term or clear your search."
-                      : "Add a transaction or change your filters."}
+                    {hasActiveFilters
+                      ? "Try changing your search or filter options."
+                      : "Add a transaction to start building your history."}
                   </p>
                 </div>
               ) : (
@@ -1076,16 +1151,26 @@ function App() {
 
               <div className="budget-progress-label">
                 <span>
-                  {Math.round(budgetPercentage)}% used
+                  {monthlyBudget > 0
+                    ? `${Math.round(
+                        budgetPercentage
+                      )}% used`
+                    : "No budget set"}
                 </span>
 
                 {monthlyBudget > 0 &&
-                  monthlyExpenses > monthlyBudget && (
-                    <span className="over-budget">
-                      Over budget
-                    </span>
-                  )}
+                monthlyExpenses > monthlyBudget ? (
+                  <span className="over-budget">
+                    {budgetStatus}
+                  </span>
+                ) : (
+                  <span>{budgetStatus}</span>
+                )}
               </div>
+
+              <p className="summary-note">
+                {budgetStatusDetail}
+              </p>
             </section>
 
             <section className="dashboard-card category-card">
