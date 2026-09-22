@@ -153,6 +153,11 @@ function App() {
     new Date().toISOString().split("T")[0]
   );
 
+  // Form validation state is kept separate from API errors.
+  // This lets users immediately understand what needs fixing
+  // before the application sends anything to the backend.
+  const [formError, setFormError] = useState("");
+
   // Transaction filtering state.
   const [filterType, setFilterType] = useState("all");
   const [filterCategory, setFilterCategory] = useState("all");
@@ -219,6 +224,7 @@ function App() {
     setCategory("Food");
     setDate(new Date().toISOString().split("T")[0]);
     setEditingId(null);
+    setFormError("");
   }
 
   function resetFilters() {
@@ -236,6 +242,7 @@ function App() {
     setAmount(String(transaction.amount));
     setCategory(transaction.category);
     setDate(transaction.date);
+    setFormError("");
 
     window.setTimeout(() => {
       document
@@ -251,16 +258,73 @@ function App() {
     resetTransactionForm();
   }
 
+  // Validate the transaction before sending it to the API.
+  // Keeping this logic in one function makes the submit handler
+  // easier to read and gives every transaction the same checks.
+  function validateTransactionForm() {
+    const trimmedDescription = description.trim();
+    const numericAmount = Number(amount);
+
+    if (!trimmedDescription) {
+      return "Please enter a description for the transaction.";
+    }
+
+    if (trimmedDescription.length > 100) {
+      return "Description must be 100 characters or less.";
+    }
+
+    if (amount.trim() === "") {
+      return "Please enter an amount.";
+    }
+
+    if (!Number.isFinite(numericAmount)) {
+      return "Please enter a valid amount.";
+    }
+
+    if (numericAmount <= 0) {
+      return "Amount must be greater than zero.";
+    }
+
+    if (!category) {
+      return "Please select a category.";
+    }
+
+    if (!date) {
+      return "Please select a date.";
+    }
+
+    // A date input normally gives YYYY-MM-DD, so checking the
+    // parsed date prevents malformed values from being submitted.
+    const selectedDate = new Date(`${date}T00:00:00`);
+
+    if (Number.isNaN(selectedDate.getTime())) {
+      return "Please enter a valid date.";
+    }
+
+    return "";
+  }
+
   async function handleSubmit(event) {
     event.preventDefault();
 
+    setFormError("");
+    setError("");
+
+    // Stop here when the form contains invalid information.
+    // This prevents unnecessary API requests.
+    const validationError = validateTransactionForm();
+
+    if (validationError) {
+      setFormError(validationError);
+      return;
+    }
+
     try {
       setSubmitting(true);
-      setError("");
 
       const transactionData = {
         type,
-        description,
+        description: description.trim(),
         amount: Number(amount),
         category,
         date,
@@ -504,8 +568,6 @@ function App() {
       : 0;
 
   // Create a clear text status for the current budget.
-  // This gives the user useful information even when the
-  // progress bar itself has reached 100%.
   let budgetStatus = "No monthly budget set";
   let budgetStatusDetail =
     "Set a monthly budget to start tracking your spending limit.";
@@ -721,16 +783,27 @@ function App() {
                 )}
               </div>
 
-              <form onSubmit={handleSubmit}>
+              {formError && (
+                <div
+                  className="form-error"
+                  role="alert"
+                  aria-live="polite"
+                >
+                  {formError}
+                </div>
+              )}
+
+              <form onSubmit={handleSubmit} noValidate>
                 <div className="form-grid">
                   <label>
                     Type
 
                     <select
                       value={type}
-                      onChange={(event) =>
-                        setType(event.target.value)
-                      }
+                      onChange={(event) => {
+                        setType(event.target.value);
+                        setFormError("");
+                      }}
                     >
                       <option value="expense">
                         Expense
@@ -748,11 +821,18 @@ function App() {
                     <input
                       type="text"
                       value={description}
-                      onChange={(event) =>
-                        setDescription(event.target.value)
-                      }
+                      onChange={(event) => {
+                        setDescription(event.target.value);
+                        setFormError("");
+                      }}
                       placeholder="e.g. Groceries"
-                      required
+                      maxLength="100"
+                      aria-invalid={
+                        formError &&
+                        !description.trim()
+                          ? "true"
+                          : "false"
+                      }
                     />
                   </label>
 
@@ -764,11 +844,18 @@ function App() {
                       min="0"
                       step="0.01"
                       value={amount}
-                      onChange={(event) =>
-                        setAmount(event.target.value)
-                      }
+                      onChange={(event) => {
+                        setAmount(event.target.value);
+                        setFormError("");
+                      }}
                       placeholder="0"
-                      required
+                      aria-invalid={
+                        formError &&
+                        (!amount ||
+                          Number(amount) <= 0)
+                          ? "true"
+                          : "false"
+                      }
                     />
                   </label>
 
@@ -777,9 +864,10 @@ function App() {
 
                     <select
                       value={category}
-                      onChange={(event) =>
-                        setCategory(event.target.value)
-                      }
+                      onChange={(event) => {
+                        setCategory(event.target.value);
+                        setFormError("");
+                      }}
                     >
                       {categories.map((item) => (
                         <option
@@ -802,10 +890,15 @@ function App() {
                     <input
                       type="date"
                       value={date}
-                      onChange={(event) =>
-                        setDate(event.target.value)
+                      onChange={(event) => {
+                        setDate(event.target.value);
+                        setFormError("");
+                      }}
+                      aria-invalid={
+                        formError && !date
+                          ? "true"
+                          : "false"
                       }
-                      required
                     />
                   </label>
                 </div>
