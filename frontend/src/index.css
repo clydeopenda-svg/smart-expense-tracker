@@ -21,6 +21,7 @@ body {
   color: #171817;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  overflow-x: hidden;
 }
 
 button,
@@ -60,6 +61,7 @@ button:disabled {
   display: flex;
   align-items: center;
   gap: 11px;
+  min-width: 0;
 }
 
 .brand-mark {
@@ -68,6 +70,8 @@ button:disabled {
 
   display: grid;
   place-items: center;
+
+  flex-shrink: 0;
 
   border-radius: 10px;
 
@@ -120,6 +124,8 @@ button:disabled {
   width: 6px;
   height: 6px;
 
+  flex-shrink: 0;
+
   border-radius: 50%;
 
   background: #3f8759;
@@ -140,6 +146,10 @@ button:disabled {
   gap: 30px;
 
   margin-bottom: 28px;
+}
+
+.hero-section > div:first-child {
+  min-width: 0;
 }
 
 .section-kicker {
@@ -204,6 +214,7 @@ button:disabled {
   color: #a0434d;
 
   font-size: 11px;
+  line-height: 1.5;
 }
 
 .form-error {
@@ -266,6 +277,7 @@ button:disabled {
 
   font-size: clamp(25px, 3vw, 34px);
   letter-spacing: -1.5px;
+  overflow-wrap: anywhere;
 }
 
 .summary-icon {
@@ -321,9 +333,11 @@ button:disabled {
   display: flex;
   flex-direction: column;
   gap: 14px;
+  min-width: 0;
 }
 
 .dashboard-card {
+  min-width: 0;
   padding: 28px;
 
   border: 1px solid #dedfdb;
@@ -395,6 +409,8 @@ button:disabled {
 }
 
 .secondary-button {
+  min-height: 40px;
+
   padding: 9px 13px;
 
   border: 1px solid #dcded9;
@@ -435,6 +451,7 @@ button:disabled {
 input,
 select {
   width: 100%;
+  min-width: 0;
 
   border: 1px solid #dcded9;
   border-radius: 8px;
@@ -452,6 +469,7 @@ select {
 
 input,
 select {
+  min-height: 44px;
   margin-top: 7px;
   padding: 12px 13px;
 
@@ -496,6 +514,7 @@ input::placeholder {
   gap: 5px;
 
   min-width: 0;
+  min-height: 44px;
 
   padding: 0 9px;
 
@@ -506,6 +525,8 @@ input::placeholder {
 }
 
 .date-filter span {
+  flex-shrink: 0;
+
   color: #888c86;
 
   font-size: 9px;
@@ -514,6 +535,7 @@ input::placeholder {
 
 .date-filter input {
   min-width: 0;
+  min-height: 42px;
   padding: 11px 4px;
 
   border: 0;
@@ -527,7 +549,7 @@ input::placeholder {
 }
 
 .clear-filters-button {
-  min-height: 40px;
+  min-height: 44px;
 
   padding: 0 12px;
 
@@ -557,6 +579,8 @@ input::placeholder {
   display: grid;
   place-items: center;
 
+  flex-shrink: 0;
+
   border: 1px solid #dedfdb;
   border-radius: 8px;
 
@@ -571,6 +595,7 @@ input::placeholder {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  min-width: 0;
 }
 
 .transaction-row {
@@ -578,6 +603,8 @@ input::placeholder {
   grid-template-columns: 42px minmax(0, 1fr) auto auto;
   align-items: center;
   gap: 13px;
+
+  min-width: 0;
 
   padding: 13px;
 
@@ -604,6 +631,8 @@ input::placeholder {
 
   display: grid;
   place-items: center;
+
+  flex-shrink: 0;
 
   border: 1px solid #dedfdb;
   border-radius: 9px;
@@ -653,10 +682,13 @@ input::placeholder {
   display: flex;
   align-items: center;
   gap: 6px;
+  flex-shrink: 0;
 }
 
 .edit-button,
 .delete-button {
+  min-height: 36px;
+
   padding: 6px 8px;
 
   border: 0;
@@ -693,6 +725,8 @@ input::placeholder {
 
   display: grid;
   place-items: center;
+
+  flex-shrink: 0;
 
   border: 1px solid #dedfdb;
   border-radius: 9px;
@@ -754,6 +788,7 @@ input::placeholder {
 }
 
 .budget-overview div {
+  min-width: 0;
   padding: 14px;
 
   border: 1px solid #e1e2de;
@@ -775,6 +810,7 @@ input::placeholder {
   margin-top: 5px;
 
   font-size: 12px;
+  overflow-wrap: anywhere;
 }
 
 .negative-value {
@@ -809,6 +845,7 @@ input::placeholder {
 .budget-progress-label {
   display: flex;
   justify-content: space-between;
+  gap: 12px;
 
   margin-top: 8px;
 
@@ -936,6 +973,8 @@ input::placeholder {
   justify-content: center;
   flex-direction: column;
 
+  padding: 20px;
+
   text-align: center;
 }
 
@@ -975,6 +1014,45 @@ input:focus-visible {
 
   .clear-filters-button {
     width: 100%;
+  }
+}
+
+/* Large mobile / small tablet */
+
+@media (max-width: 820px) {
+  .top-navigation,
+  .dashboard-container {
+    width: calc(100% - 32px);
+  }
+
+  .dashboard-container {
+    padding-top: 36px;
+  }
+
+  .summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .filter-bar {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .transaction-row {
+    grid-template-columns: 42px minmax(0, 1fr);
+  }
+
+  .transaction-amount {
+    grid-column: 2;
+    justify-self: start;
+  }
+
+  .transaction-actions {
+    grid-column: 2;
+    justify-self: start;
   }
 }
 
@@ -1018,10 +1096,6 @@ input:focus-visible {
     align-items: flex-start;
   }
 
-  .summary-grid {
-    grid-template-columns: 1fr;
-  }
-
   .financial-summary-card {
     min-height: 155px;
     padding: 21px;
@@ -1038,6 +1112,16 @@ input:focus-visible {
 
   .card-heading {
     align-items: flex-start;
+    gap: 14px;
+  }
+
+  .card-heading h2 {
+    min-width: 0;
+  }
+
+  .card-heading .primary-button,
+  .card-heading .secondary-button {
+    flex-shrink: 0;
   }
 
   .form-grid {
@@ -1049,16 +1133,17 @@ input:focus-visible {
   }
 
   .date-filter {
-    min-height: 42px;
+    min-height: 44px;
   }
 
   .clear-filters-button {
-    min-height: 42px;
+    min-height: 44px;
   }
 
   .transaction-row {
     grid-template-columns: 38px minmax(0, 1fr);
     gap: 10px;
+    padding: 12px;
   }
 
   .transaction-icon {
@@ -1076,6 +1161,12 @@ input:focus-visible {
     justify-self: start;
   }
 
+  .edit-button,
+  .delete-button {
+    min-height: 38px;
+    padding: 7px 9px;
+  }
+
   .budget-overview {
     grid-template-columns: 1fr 1fr;
   }
@@ -1091,6 +1182,14 @@ input:focus-visible {
   .top-navigation,
   .dashboard-container {
     width: calc(100% - 22px);
+  }
+
+  .top-navigation {
+    gap: 12px;
+  }
+
+  .brand {
+    gap: 8px;
   }
 
   .brand strong {
@@ -1127,6 +1226,15 @@ input:focus-visible {
     padding: 18px;
   }
 
+  .card-heading {
+    flex-direction: column;
+  }
+
+  .card-heading .primary-button,
+  .card-heading .secondary-button {
+    width: 100%;
+  }
+
   .card-heading h2 {
     font-size: 18px;
   }
@@ -1149,11 +1257,21 @@ input:focus-visible {
 
   .edit-button,
   .delete-button {
-    padding: 5px 6px;
+    padding: 6px 8px;
   }
 
   .budget-overview {
     grid-template-columns: 1fr;
+  }
+
+  .budget-progress-label {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .insight-card {
+    gap: 11px;
   }
 
   .insight-card h3 {
