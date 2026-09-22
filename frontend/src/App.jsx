@@ -104,6 +104,12 @@ function Icon({ name, size = 20 }) {
         <path d="m12 3 1.4 5.6L19 10l-5.6 1.4L12 17l-1.4-5.6L5 10l5.6-1.4L12 3Z" />
       </svg>
     ),
+    search: (
+      <svg {...commonProps}>
+        <circle cx="11" cy="11" r="6.5" />
+        <path d="m16 16 5 5" />
+      </svg>
+    ),
   };
 
   return icons[name] || icons.other;
@@ -135,6 +141,7 @@ function App() {
   const [filterCategory, setFilterCategory] = useState("all");
   const [filterStartDate, setFilterStartDate] = useState("");
   const [filterEndDate, setFilterEndDate] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
 
   const [editingId, setEditingId] = useState(null);
 
@@ -201,6 +208,7 @@ function App() {
     setFilterCategory("all");
     setFilterStartDate("");
     setFilterEndDate("");
+    setSearchTerm("");
   }
 
   function startEditing(transaction) {
@@ -367,6 +375,19 @@ function App() {
 
   const filteredTransactions = transactions.filter(
     (transaction) => {
+      const normalizedSearch = searchTerm
+        .trim()
+        .toLowerCase();
+
+      const matchesSearch =
+        !normalizedSearch ||
+        transaction.description
+          ?.toLowerCase()
+          .includes(normalizedSearch) ||
+        transaction.category
+          ?.toLowerCase()
+          .includes(normalizedSearch);
+
       const matchesType =
         filterType === "all" ||
         transaction.type === filterType;
@@ -384,6 +405,7 @@ function App() {
         transaction.date <= filterEndDate;
 
       return (
+        matchesSearch &&
         matchesType &&
         matchesCategory &&
         matchesStartDate &&
@@ -757,6 +779,33 @@ function App() {
                 </span>
               </div>
 
+              <div className="transaction-search">
+                <div className="search-input-wrapper">
+                  <Icon name="search" size={18} />
+
+                  <input
+                    type="search"
+                    value={searchTerm}
+                    onChange={(event) =>
+                      setSearchTerm(event.target.value)
+                    }
+                    placeholder="Search transactions..."
+                    aria-label="Search transactions"
+                  />
+
+                  {searchTerm && (
+                    <button
+                      type="button"
+                      className="search-clear-button"
+                      onClick={() => setSearchTerm("")}
+                      aria-label="Clear transaction search"
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+              </div>
+
               <div className="filter-bar">
                 <select
                   value={filterType}
@@ -844,12 +893,15 @@ function App() {
               ) : filteredTransactions.length === 0 ? (
                 <div className="empty-state">
                   <strong>
-                    No transactions found.
+                    {searchTerm
+                      ? "No matching transactions."
+                      : "No transactions found."}
                   </strong>
 
                   <p>
-                    Add a transaction or change your
-                    filters.
+                    {searchTerm
+                      ? "Try a different search term or clear your search."
+                      : "Add a transaction or change your filters."}
                   </p>
                 </div>
               ) : (
