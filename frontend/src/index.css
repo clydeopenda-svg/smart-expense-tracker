@@ -8,12 +8,19 @@ html {
 
 body {
   margin: 0;
+  min-width: 320px;
   font-family:
-    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
-    "Segoe UI", sans-serif;
-  background: #f5f6f8;
-  color: #17191f;
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+  background: #f6f6f4;
+  color: #171817;
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 button,
@@ -34,13 +41,11 @@ button:disabled {
   min-height: 100vh;
 }
 
-/* ================================
-   NAVIGATION
-================================ */
+/* Navigation */
 
 .top-navigation {
   width: min(1380px, calc(100% - 48px));
-  min-height: 82px;
+  min-height: 78px;
   margin: 0 auto;
 
   display: flex;
@@ -48,35 +53,37 @@ button:disabled {
   justify-content: space-between;
   gap: 30px;
 
-  border-bottom: 1px solid #e3e5e9;
+  border-bottom: 1px solid #dedfdb;
 }
 
 .brand {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 11px;
 }
 
 .brand-mark {
-  width: 42px;
-  height: 42px;
+  width: 40px;
+  height: 40px;
 
   display: grid;
   place-items: center;
 
-  border-radius: 14px;
+  border-radius: 10px;
 
-  background: #17191f;
+  background: #171817;
   color: #ffffff;
 
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 800;
 
-  box-shadow: 0 8px 20px rgba(23, 25, 31, 0.14);
+  box-shadow: 0 5px 14px rgba(23, 24, 23, 0.12);
 }
 
 .brand strong {
   display: block;
+
+  color: #171817;
 
   font-size: 15px;
   font-weight: 800;
@@ -87,7 +94,7 @@ button:disabled {
   display: block;
   margin-top: 3px;
 
-  color: #9296a0;
+  color: #858983;
   font-size: 10px;
 }
 
@@ -96,33 +103,29 @@ button:disabled {
   align-items: center;
   gap: 8px;
 
-  padding: 8px 12px;
+  padding: 7px 11px;
 
-  border: 1px solid #e5e6ea;
-  border-radius: 100px;
+  border: 1px solid #dedfdb;
+  border-radius: 8px;
 
   background: #ffffff;
 
-  color: #7e838d;
+  color: #747872;
 
   font-size: 10px;
   font-weight: 700;
 }
 
 .status-dot {
-  width: 7px;
-  height: 7px;
+  width: 6px;
+  height: 6px;
 
   border-radius: 50%;
 
-  background: #67b985;
-
-  box-shadow: 0 0 0 4px rgba(103, 185, 133, 0.12);
+  background: #3f8759;
 }
 
-/* ================================
-   MAIN DASHBOARD
-================================ */
+/* Main dashboard */
 
 .dashboard-container {
   width: min(1380px, calc(100% - 48px));
@@ -142,7 +145,7 @@ button:disabled {
 .section-kicker {
   margin: 0 0 8px;
 
-  color: #999da6;
+  color: #7f837d;
 
   font-size: 10px;
   font-weight: 800;
@@ -153,6 +156,8 @@ button:disabled {
   max-width: 720px;
   margin: 0;
 
+  color: #171817;
+
   font-size: clamp(38px, 5vw, 62px);
   line-height: 0.98;
   letter-spacing: -3px;
@@ -162,7 +167,8 @@ button:disabled {
   max-width: 500px;
   margin: 18px 0 0;
 
-  color: #858a95;
+  color: #777b75;
+
   font-size: 14px;
   line-height: 1.6;
 }
@@ -175,29 +181,27 @@ button:disabled {
 
   flex-shrink: 0;
 
-  color: #9498a2;
+  color: #858983;
   font-size: 11px;
 }
 
 .hero-date strong {
-  color: #272a31;
+  color: #292b28;
   font-size: 13px;
 }
 
-/* ================================
-   ALERTS
-================================ */
+/* Alerts */
 
 .alert-message,
 .form-error {
   margin-bottom: 14px;
   padding: 12px 14px;
 
-  border: 1px solid #f0c9ce;
-  border-radius: 13px;
+  border: 1px solid #e6bfc3;
+  border-radius: 8px;
 
-  background: #fff1f3;
-  color: #a44c58;
+  background: #fff5f5;
+  color: #a0434d;
 
   font-size: 11px;
 }
@@ -206,9 +210,7 @@ button:disabled {
   margin: 12px 0 0;
 }
 
-/* ================================
-   SUMMARY CARDS
-================================ */
+/* Summary cards */
 
 .summary-grid {
   display: grid;
@@ -220,25 +222,23 @@ button:disabled {
 
 .financial-summary-card {
   min-height: 185px;
-  padding: 25px;
+  padding: 24px;
 
-  border: 1px solid #e5e6ea;
-  border-radius: 25px;
+  border: 1px solid #dedfdb;
+  border-radius: 16px;
 
   background: #ffffff;
 
-  box-shadow: 0 10px 35px rgba(28, 30, 36, 0.035);
+  box-shadow: 0 6px 24px rgba(28, 30, 28, 0.035);
 
   transition:
-    transform 0.2s ease,
     border-color 0.2s ease,
     box-shadow 0.2s ease;
 }
 
 .financial-summary-card:hover {
-  transform: translateY(-2px);
-  border-color: #dcdee4;
-  box-shadow: 0 15px 40px rgba(28, 30, 36, 0.06);
+  border-color: #d2d4cf;
+  box-shadow: 0 8px 28px rgba(28, 30, 28, 0.05);
 }
 
 .financial-summary-header {
@@ -251,7 +251,7 @@ button:disabled {
 .summary-label {
   display: block;
 
-  color: #8c919b;
+  color: #858983;
 
   font-size: 10px;
   font-weight: 750;
@@ -261,6 +261,8 @@ button:disabled {
 
 .financial-summary-header h2 {
   margin: 11px 0 0;
+
+  color: #171817;
 
   font-size: clamp(25px, 3vw, 34px);
   letter-spacing: -1.5px;
@@ -275,37 +277,38 @@ button:disabled {
 
   flex-shrink: 0;
 
-  border-radius: 12px;
+  border: 1px solid #dedfdb;
+  border-radius: 9px;
 
-  background: #eeeaff;
-  color: #6d62c9;
+  background: #f4f4f1;
+  color: #444742;
 
   font-size: 16px;
   font-weight: 700;
 }
 
 .income-card .summary-icon {
-  background: #e2f5e9;
-  color: #29834d;
+  border-color: #cfe2d5;
+  background: #f0f7f2;
+  color: #34784b;
 }
 
 .expense-card .summary-icon {
-  background: #f8e5e8;
-  color: #a33c4b;
+  border-color: #ead0d3;
+  background: #fcf2f3;
+  color: #a0434d;
 }
 
 .summary-note {
   margin: 18px 0 0;
 
-  color: #9296a0;
+  color: #858983;
 
   font-size: 10px;
   line-height: 1.5;
 }
 
-/* ================================
-   MAIN LAYOUT
-================================ */
+/* Main layout */
 
 .dashboard-layout {
   display: grid;
@@ -323,12 +326,12 @@ button:disabled {
 .dashboard-card {
   padding: 28px;
 
-  border: 1px solid #e5e6ea;
-  border-radius: 25px;
+  border: 1px solid #dedfdb;
+  border-radius: 16px;
 
-  background: rgba(255, 255, 255, 0.9);
+  background: #ffffff;
 
-  box-shadow: 0 10px 35px rgba(28, 30, 36, 0.035);
+  box-shadow: 0 6px 24px rgba(28, 30, 28, 0.035);
 
   transition:
     border-color 0.2s ease,
@@ -336,8 +339,8 @@ button:disabled {
 }
 
 .dashboard-card:hover {
-  border-color: #dedfe4;
-  box-shadow: 0 14px 40px rgba(28, 30, 36, 0.045);
+  border-color: #d2d4cf;
+  box-shadow: 0 8px 28px rgba(28, 30, 28, 0.045);
 }
 
 .card-heading {
@@ -352,39 +355,39 @@ button:disabled {
 .card-heading h2 {
   margin: 0;
 
+  color: #20221f;
+
   font-size: 20px;
   letter-spacing: -0.7px;
 }
 
-/* ================================
-   BUTTONS
-================================ */
+/* Buttons */
 
 .primary-button {
   min-height: 44px;
 
   padding: 0 18px;
 
-  border: 0;
-  border-radius: 12px;
+  border: 1px solid #171817;
+  border-radius: 8px;
 
-  background: #17191f;
+  background: #171817;
   color: #ffffff;
 
   font-size: 11px;
   font-weight: 750;
 
-  box-shadow: 0 8px 18px rgba(23, 25, 31, 0.1);
+  box-shadow: none;
 
   transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease,
+    background 0.2s ease,
+    border-color 0.2s ease,
     opacity 0.2s ease;
 }
 
 .primary-button:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 12px 24px rgba(23, 25, 31, 0.15);
+  background: #30322f;
+  border-color: #30322f;
 }
 
 .primary-button:disabled {
@@ -394,11 +397,11 @@ button:disabled {
 .secondary-button {
   padding: 9px 13px;
 
-  border: 1px solid #e0e2e6;
-  border-radius: 10px;
+  border: 1px solid #dcded9;
+  border-radius: 8px;
 
-  background: #f7f8f9;
-  color: #666b75;
+  background: #f7f7f5;
+  color: #666b65;
 
   font-size: 10px;
   font-weight: 700;
@@ -406,12 +409,10 @@ button:disabled {
 
 .secondary-button:hover {
   background: #ffffff;
-  border-color: #d4d6dc;
+  border-color: #cdd0ca;
 }
 
-/* ================================
-   FORM
-================================ */
+/* Form */
 
 .form-grid {
   display: grid;
@@ -425,7 +426,7 @@ button:disabled {
 .budget-input-label {
   display: block;
 
-  color: #858a94;
+  color: #777b75;
 
   font-size: 10px;
   font-weight: 700;
@@ -435,13 +436,13 @@ input,
 select {
   width: 100%;
 
-  border: 1px solid #e1e3e7;
-  border-radius: 12px;
+  border: 1px solid #dcded9;
+  border-radius: 8px;
 
   outline: none;
 
-  background: #f9fafb;
-  color: #272a31;
+  background: #fafaf8;
+  color: #272a27;
 
   transition:
     border-color 0.2s ease,
@@ -459,24 +460,22 @@ select {
 
 input:hover,
 select:hover {
-  border-color: #d5d7dc;
+  border-color: #cfd1cc;
   background: #ffffff;
 }
 
 input:focus,
 select:focus {
-  border-color: #a49be9;
+  border-color: #70756e;
   background: #ffffff;
-  box-shadow: 0 0 0 3px rgba(145, 133, 230, 0.1);
+  box-shadow: 0 0 0 3px rgba(80, 84, 78, 0.08);
 }
 
 input::placeholder {
-  color: #b0b3ba;
+  color: #aaada8;
 }
 
-/* ================================
-   FILTERS
-================================ */
+/* Filters */
 
 .filter-bar {
   display: grid;
@@ -500,14 +499,15 @@ input::placeholder {
 
   padding: 0 9px;
 
-  border: 1px solid #e1e3e7;
-  border-radius: 12px;
+  border: 1px solid #dcded9;
+  border-radius: 8px;
 
-  background: #f9fafb;
+  background: #fafaf8;
 }
 
 .date-filter span {
-  color: #999da5;
+  color: #888c86;
+
   font-size: 9px;
   font-weight: 700;
 }
@@ -531,11 +531,11 @@ input::placeholder {
 
   padding: 0 12px;
 
-  border: 1px solid #e0e2e6;
-  border-radius: 12px;
+  border: 1px solid #dcded9;
+  border-radius: 8px;
 
   background: #ffffff;
-  color: #777c86;
+  color: #777b75;
 
   font-size: 10px;
   font-weight: 700;
@@ -544,13 +544,11 @@ input::placeholder {
 }
 
 .clear-filters-button:hover {
-  border-color: #cfd1d7;
-  color: #17191f;
+  border-color: #c9ccc6;
+  color: #171817;
 }
 
-/* ================================
-   TRANSACTIONS
-================================ */
+/* Transactions */
 
 .transaction-count {
   min-width: 28px;
@@ -559,10 +557,11 @@ input::placeholder {
   display: grid;
   place-items: center;
 
-  border-radius: 10px;
+  border: 1px solid #dedfdb;
+  border-radius: 8px;
 
-  background: #f0f0f3;
-  color: #858a94;
+  background: #f4f4f1;
+  color: #777b75;
 
   font-size: 10px;
   font-weight: 750;
@@ -582,23 +581,21 @@ input::placeholder {
 
   padding: 13px;
 
-  border: 1px solid #ececef;
-  border-radius: 17px;
+  border: 1px solid #e4e5e1;
+  border-radius: 11px;
 
-  background: #fafafa;
+  background: #fafaf8;
 
   transition:
-    transform 0.2s ease,
     border-color 0.2s ease,
     background 0.2s ease,
     box-shadow 0.2s ease;
 }
 
 .transaction-row:hover {
-  transform: translateY(-1px);
-  border-color: #dedfe4;
+  border-color: #d4d6d1;
   background: #ffffff;
-  box-shadow: 0 8px 20px rgba(28, 30, 36, 0.04);
+  box-shadow: 0 5px 16px rgba(28, 30, 28, 0.035);
 }
 
 .transaction-icon {
@@ -608,9 +605,10 @@ input::placeholder {
   display: grid;
   place-items: center;
 
-  border-radius: 13px;
+  border: 1px solid #dedfdb;
+  border-radius: 9px;
 
-  background: #eeeef2;
+  background: #f1f1ee;
 
   font-size: 16px;
 }
@@ -633,7 +631,7 @@ input::placeholder {
   display: block;
   margin-top: 5px;
 
-  color: #979aa3;
+  color: #92968f;
 
   font-size: 9px;
 }
@@ -644,17 +642,17 @@ input::placeholder {
 }
 
 .transaction-amount.income {
-  color: #378653;
+  color: #34784b;
 }
 
 .transaction-amount.expense {
-  color: #ad4b58;
+  color: #a0434d;
 }
 
 .transaction-actions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
 .edit-button,
@@ -662,7 +660,7 @@ input::placeholder {
   padding: 6px 8px;
 
   border: 0;
-  border-radius: 8px;
+  border-radius: 6px;
 
   background: transparent;
 
@@ -671,25 +669,23 @@ input::placeholder {
 }
 
 .edit-button {
-  color: #6d62c9;
+  color: #555a54;
 }
 
 .edit-button:hover {
-  background: #eeeaff;
+  background: #eeeeeb;
 }
 
 .delete-button {
-  color: #aaaeb7;
+  color: #999d97;
 }
 
 .delete-button:hover {
-  background: #fff0f2;
-  color: #bd5360;
+  background: #fff0f1;
+  color: #ad4a55;
 }
 
-/* ================================
-   BUDGET
-================================ */
+/* Budget */
 
 .budget-icon {
   width: 38px;
@@ -698,10 +694,11 @@ input::placeholder {
   display: grid;
   place-items: center;
 
-  border-radius: 12px;
+  border: 1px solid #dedfdb;
+  border-radius: 9px;
 
-  background: #eeeaff;
-  color: #6d62c9;
+  background: #f4f4f1;
+  color: #444742;
 
   font-size: 17px;
 }
@@ -714,16 +711,16 @@ input::placeholder {
 
   overflow: hidden;
 
-  border: 1px solid #e1e3e7;
-  border-radius: 12px;
+  border: 1px solid #dcded9;
+  border-radius: 8px;
 
-  background: #f9fafb;
+  background: #fafaf8;
 }
 
 .budget-input-wrapper span {
   padding-left: 13px;
 
-  color: #969aa3;
+  color: #888c86;
 
   font-size: 10px;
   font-weight: 700;
@@ -759,15 +756,17 @@ input::placeholder {
 .budget-overview div {
   padding: 14px;
 
-  border-radius: 14px;
+  border: 1px solid #e1e2de;
+  border-radius: 10px;
 
-  background: #f5f5f7;
+  background: #f7f7f5;
 }
 
 .budget-overview span {
   display: block;
 
-  color: #969aa3;
+  color: #888c86;
+
   font-size: 9px;
 }
 
@@ -779,7 +778,7 @@ input::placeholder {
 }
 
 .negative-value {
-  color: #ad4b58;
+  color: #a0434d;
 }
 
 .budget-card .progress-track {
@@ -792,19 +791,19 @@ input::placeholder {
 
   overflow: hidden;
 
-  border-radius: 100px;
+  border-radius: 4px;
 
-  background: #ececf0;
+  background: #e7e8e4;
 }
 
 .progress-fill {
   height: 100%;
 
-  border-radius: inherit;
+  border-radius: 4px;
 
-  background: linear-gradient(90deg, #8d83e8, #b7b0ff);
+  background: #343733;
 
-  transition: width 0.5s ease;
+  transition: width 0.35s ease;
 }
 
 .budget-progress-label {
@@ -813,19 +812,17 @@ input::placeholder {
 
   margin-top: 8px;
 
-  color: #9296a0;
+  color: #858983;
 
   font-size: 9px;
 }
 
 .over-budget {
-  color: #ad4b58;
+  color: #a0434d;
   font-weight: 700;
 }
 
-/* ================================
-   CATEGORY BREAKDOWN
-================================ */
+/* Category breakdown */
 
 .category-list {
   display: flex;
@@ -843,14 +840,14 @@ input::placeholder {
 }
 
 .category-item-top span {
-  color: #555a64;
+  color: #555a54;
 
   font-size: 11px;
   font-weight: 650;
 }
 
 .category-item-top strong {
-  color: #33363e;
+  color: #333632;
 
   font-size: 11px;
 }
@@ -861,24 +858,22 @@ input::placeholder {
 
   overflow: hidden;
 
-  border-radius: 100px;
+  border-radius: 3px;
 
-  background: #ececf0;
+  background: #e7e8e4;
 }
 
 .category-progress div {
   height: 100%;
 
-  border-radius: inherit;
+  border-radius: 3px;
 
-  background: linear-gradient(90deg, #8d83e8, #b7b0ff);
+  background: #343733;
 
-  transition: width 0.5s ease;
+  transition: width 0.35s ease;
 }
 
-/* ================================
-   INSIGHTS
-================================ */
+/* Insights */
 
 .insight-card {
   display: flex;
@@ -886,20 +881,12 @@ input::placeholder {
 
   padding: 25px;
 
-  overflow: hidden;
+  border: 1px solid #dedfdb;
+  border-radius: 16px;
 
-  border: 1px solid #dcd8f6;
-  border-radius: 25px;
+  background: #ffffff;
 
-  background:
-    radial-gradient(
-      circle at 90% 10%,
-      rgba(255, 255, 255, 0.55),
-      transparent 30%
-    ),
-    linear-gradient(135deg, #dedaff, #d4e1ff);
-
-  box-shadow: 0 12px 35px rgba(82, 76, 135, 0.08);
+  box-shadow: 0 6px 24px rgba(28, 30, 28, 0.035);
 }
 
 .insight-icon {
@@ -911,17 +898,19 @@ input::placeholder {
 
   flex-shrink: 0;
 
-  border-radius: 12px;
+  border: 1px solid #dedfdb;
+  border-radius: 9px;
 
-  background: rgba(255, 255, 255, 0.48);
-
-  color: #6258a8;
+  background: #f4f4f1;
+  color: #444742;
 
   font-size: 17px;
 }
 
 .insight-card h3 {
   margin: 0;
+
+  color: #20221f;
 
   font-size: 16px;
   line-height: 1.25;
@@ -931,15 +920,13 @@ input::placeholder {
 .insight-card p:last-child {
   margin: 9px 0 0;
 
-  color: #777490;
+  color: #777b75;
 
   font-size: 10px;
   line-height: 1.5;
 }
 
-/* ================================
-   EMPTY STATE
-================================ */
+/* Empty state */
 
 .empty-state {
   min-height: 180px;
@@ -960,26 +947,22 @@ input::placeholder {
   max-width: 300px;
   margin: 7px 0 0;
 
-  color: #989ca5;
+  color: #92968f;
 
   font-size: 10px;
   line-height: 1.5;
 }
 
-/* ================================
-   FOCUS STATES
-================================ */
+/* Focus states */
 
 button:focus-visible,
 select:focus-visible,
 input:focus-visible {
-  outline: 3px solid rgba(118, 107, 224, 0.2);
+  outline: 2px solid #555a54;
   outline-offset: 2px;
 }
 
-/* ================================
-   TABLET
-================================ */
+/* Tablet */
 
 @media (max-width: 1100px) {
   .dashboard-layout {
@@ -995,9 +978,7 @@ input:focus-visible {
   }
 }
 
-/* ================================
-   MOBILE
-================================ */
+/* Mobile */
 
 @media (max-width: 700px) {
   .top-navigation,
@@ -1052,7 +1033,7 @@ input:focus-visible {
 
   .dashboard-card {
     padding: 21px;
-    border-radius: 21px;
+    border-radius: 14px;
   }
 
   .card-heading {
@@ -1104,9 +1085,7 @@ input:focus-visible {
   }
 }
 
-/* ================================
-   SMALL PHONES
-================================ */
+/* Small phones */
 
 @media (max-width: 430px) {
   .top-navigation,
