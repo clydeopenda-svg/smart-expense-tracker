@@ -154,8 +154,6 @@ function App() {
   );
 
   // Form validation state is kept separate from API errors.
-  // This lets users immediately understand what needs fixing
-  // before the application sends anything to the backend.
   const [formError, setFormError] = useState("");
 
   // Transaction filtering state.
@@ -235,6 +233,24 @@ function App() {
     setSearchTerm("");
   }
 
+  // Move keyboard focus to the transaction form after actions
+  // that intentionally bring the user back to that section.
+  function focusTransactionForm() {
+    window.setTimeout(() => {
+      const formSection =
+        document.getElementById("transaction-form");
+
+      formSection?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+
+      document
+        .getElementById("transaction-description")
+        ?.focus();
+    }, 50);
+  }
+
   function startEditing(transaction) {
     setEditingId(transaction.id);
     setType(transaction.type);
@@ -244,23 +260,15 @@ function App() {
     setDate(transaction.date);
     setFormError("");
 
-    window.setTimeout(() => {
-      document
-        .getElementById("transaction-form")
-        ?.scrollIntoView({
-          behavior: "smooth",
-          block: "start",
-        });
-    }, 50);
+    focusTransactionForm();
   }
 
   function cancelEditing() {
     resetTransactionForm();
+    focusTransactionForm();
   }
 
   // Validate the transaction before sending it to the API.
-  // Keeping this logic in one function makes the submit handler
-  // easier to read and gives every transaction the same checks.
   function validateTransactionForm() {
     const trimmedDescription = description.trim();
     const numericAmount = Number(amount);
@@ -293,8 +301,6 @@ function App() {
       return "Please select a date.";
     }
 
-    // A date input normally gives YYYY-MM-DD, so checking the
-    // parsed date prevents malformed values from being submitted.
     const selectedDate = new Date(`${date}T00:00:00`);
 
     if (Number.isNaN(selectedDate.getTime())) {
@@ -310,12 +316,36 @@ function App() {
     setFormError("");
     setError("");
 
-    // Stop here when the form contains invalid information.
-    // This prevents unnecessary API requests.
     const validationError = validateTransactionForm();
 
     if (validationError) {
       setFormError(validationError);
+
+      // Return focus to the first field that needs attention.
+      window.setTimeout(() => {
+        if (!description.trim()) {
+          document
+            .getElementById("transaction-description")
+            ?.focus();
+        } else if (
+          amount.trim() === "" ||
+          !Number.isFinite(Number(amount)) ||
+          Number(amount) <= 0
+        ) {
+          document
+            .getElementById("transaction-amount")
+            ?.focus();
+        } else if (!category) {
+          document
+            .getElementById("transaction-category")
+            ?.focus();
+        } else if (!date) {
+          document
+            .getElementById("transaction-date")
+            ?.focus();
+        }
+      }, 0);
+
       return;
     }
 
@@ -365,6 +395,13 @@ function App() {
       }
 
       resetTransactionForm();
+
+      // Keep keyboard users in a predictable place after saving.
+      window.setTimeout(() => {
+        document
+          .getElementById("transaction-history")
+          ?.focus();
+      }, 0);
     } catch (err) {
       setError(err.message || "Failed to save transaction.");
     } finally {
@@ -446,6 +483,12 @@ function App() {
 
       setMonthlyBudget(Number(data.amount) || 0);
       setBudgetInput(String(data.amount));
+
+      // Return focus to the budget input so keyboard users
+      // receive a predictable confirmation point.
+      window.setTimeout(() => {
+        document.getElementById("budget-input")?.focus();
+      }, 0);
     } catch (err) {
       setBudgetError(
         err.message || "Failed to update budget."
@@ -503,7 +546,6 @@ function App() {
     filterStartDate !== "" ||
     filterEndDate !== "";
 
-  // Calculate the overall income recorded in the application.
   const totalIncome = transactions
     .filter((transaction) => transaction.type === "income")
     .reduce(
@@ -512,7 +554,6 @@ function App() {
       0
     );
 
-  // Calculate all expenses recorded in the application.
   const totalExpenses = transactions
     .filter((transaction) => transaction.type === "expense")
     .reduce(
@@ -527,8 +568,6 @@ function App() {
   const currentYear = currentDate.getFullYear();
   const currentMonth = currentDate.getMonth();
 
-  // Only expenses from the current calendar month count
-  // toward the monthly budget.
   const monthlyExpenses = transactions
     .filter((transaction) => {
       if (
@@ -556,9 +595,6 @@ function App() {
   const budgetRemaining =
     monthlyBudget - monthlyExpenses;
 
-  // Calculate how much of the monthly budget has been used.
-  // The value is capped at 100 for the progress bar so
-  // the bar does not grow outside its container.
   const budgetPercentage =
     monthlyBudget > 0
       ? Math.min(
@@ -567,7 +603,6 @@ function App() {
         )
       : 0;
 
-  // Create a clear text status for the current budget.
   let budgetStatus = "No monthly budget set";
   let budgetStatusDetail =
     "Set a monthly budget to start tracking your spending limit.";
@@ -639,9 +674,11 @@ function App() {
 
   return (
     <div className="app-shell">
-      <nav className="top-navigation">
+      <nav className="top-navigation" aria-label="Main navigation">
         <div className="brand">
-          <div className="brand-mark">S</div>
+          <div className="brand-mark" aria-hidden="true">
+            S
+          </div>
 
           <div>
             <strong>Smart Expense</strong>
@@ -650,19 +687,24 @@ function App() {
         </div>
 
         <div className="nav-status">
-          <span className="status-dot"></span>
+          <span className="status-dot" aria-hidden="true"></span>
           Finance overview
         </div>
       </nav>
 
       <main className="dashboard-container">
-        <section className="hero-section">
+        <section
+          className="hero-section"
+          aria-labelledby="dashboard-title"
+        >
           <div>
             <p className="section-kicker">
               YOUR MONEY AT A GLANCE
             </p>
 
-            <h1>Take control of your money.</h1>
+            <h1 id="dashboard-title">
+              Take control of your money.
+            </h1>
 
             <p className="hero-description">
               Track your spending, manage your budget, and
@@ -684,12 +726,19 @@ function App() {
         </section>
 
         {error && (
-          <div className="alert-message">
+          <div
+            className="alert-message"
+            role="alert"
+            aria-live="assertive"
+          >
             {error}
           </div>
         )}
 
-        <section className="summary-grid">
+        <section
+          className="summary-grid"
+          aria-label="Financial summary"
+        >
           <article className="financial-summary-card balance-card">
             <div className="financial-summary-header">
               <div>
@@ -756,6 +805,7 @@ function App() {
             <section
               className="dashboard-card transaction-form-card"
               id="transaction-form"
+              aria-labelledby="transaction-form-title"
             >
               <div className="card-heading">
                 <div>
@@ -765,7 +815,7 @@ function App() {
                       : "ADD TRANSACTION"}
                   </p>
 
-                  <h2>
+                  <h2 id="transaction-form-title">
                     {editingId !== null
                       ? "Edit your transaction"
                       : "Record your money movement"}
@@ -777,6 +827,7 @@ function App() {
                     className="secondary-button"
                     type="button"
                     onClick={cancelEditing}
+                    aria-label="Cancel editing transaction"
                   >
                     Cancel
                   </button>
@@ -786,6 +837,7 @@ function App() {
               {formError && (
                 <div
                   className="form-error"
+                  id="transaction-form-error"
                   role="alert"
                   aria-live="polite"
                 >
@@ -793,12 +845,21 @@ function App() {
                 </div>
               )}
 
-              <form onSubmit={handleSubmit} noValidate>
+              <form
+                onSubmit={handleSubmit}
+                noValidate
+                aria-describedby={
+                  formError
+                    ? "transaction-form-error"
+                    : undefined
+                }
+              >
                 <div className="form-grid">
-                  <label>
+                  <label htmlFor="transaction-type">
                     Type
 
                     <select
+                      id="transaction-type"
                       value={type}
                       onChange={(event) => {
                         setType(event.target.value);
@@ -815,10 +876,11 @@ function App() {
                     </select>
                   </label>
 
-                  <label>
+                  <label htmlFor="transaction-description">
                     Description
 
                     <input
+                      id="transaction-description"
                       type="text"
                       value={description}
                       onChange={(event) => {
@@ -836,10 +898,11 @@ function App() {
                     />
                   </label>
 
-                  <label>
+                  <label htmlFor="transaction-amount">
                     Amount
 
                     <input
+                      id="transaction-amount"
                       type="number"
                       min="0"
                       step="0.01"
@@ -859,10 +922,11 @@ function App() {
                     />
                   </label>
 
-                  <label>
+                  <label htmlFor="transaction-category">
                     Category
 
                     <select
+                      id="transaction-category"
                       value={category}
                       onChange={(event) => {
                         setCategory(event.target.value);
@@ -884,10 +948,11 @@ function App() {
                     </select>
                   </label>
 
-                  <label>
+                  <label htmlFor="transaction-date">
                     Date
 
                     <input
+                      id="transaction-date"
                       type="date"
                       value={date}
                       onChange={(event) => {
@@ -907,6 +972,7 @@ function App() {
                   className="primary-button"
                   type="submit"
                   disabled={submitting}
+                  aria-busy={submitting}
                 >
                   {submitting
                     ? editingId !== null
@@ -919,17 +985,27 @@ function App() {
               </form>
             </section>
 
-            <section className="dashboard-card transactions-card">
+            <section
+              className="dashboard-card transactions-card"
+              id="transaction-history"
+              tabIndex="-1"
+              aria-labelledby="transaction-history-title"
+            >
               <div className="card-heading">
                 <div>
                   <p className="section-kicker">
                     TRANSACTION HISTORY
                   </p>
 
-                  <h2>Your transactions</h2>
+                  <h2 id="transaction-history-title">
+                    Your transactions
+                  </h2>
                 </div>
 
-                <span className="transaction-count">
+                <span
+                  className="transaction-count"
+                  aria-label={`${filteredTransactions.length} transactions shown`}
+                >
                   {filteredTransactions.length}
                 </span>
               </div>
@@ -961,7 +1037,7 @@ function App() {
                 </div>
               </div>
 
-              <div className="filter-bar">
+              <div className="filter-bar" aria-label="Transaction filters">
                 <select
                   value={filterType}
                   onChange={(event) =>
@@ -999,10 +1075,14 @@ function App() {
                   <option value="Salary">Salary</option>
                 </select>
 
-                <label className="date-filter">
+                <label
+                  className="date-filter"
+                  htmlFor="filter-start-date"
+                >
                   <span>From</span>
 
                   <input
+                    id="filter-start-date"
                     type="date"
                     value={filterStartDate}
                     max={filterEndDate || undefined}
@@ -1015,10 +1095,14 @@ function App() {
                   />
                 </label>
 
-                <label className="date-filter">
+                <label
+                  className="date-filter"
+                  htmlFor="filter-end-date"
+                >
                   <span>To</span>
 
                   <input
+                    id="filter-end-date"
                     type="date"
                     value={filterEndDate}
                     min={filterStartDate || undefined}
@@ -1036,19 +1120,27 @@ function App() {
                   type="button"
                   onClick={resetFilters}
                   disabled={!hasActiveFilters}
+                  aria-label="Clear all transaction filters"
                 >
                   Clear filters
                 </button>
               </div>
 
-              <div className="summary-note">
+              <div
+                className="summary-note"
+                aria-live="polite"
+              >
                 {hasActiveFilters
                   ? `Showing ${filteredTransactions.length} of ${transactions.length} transactions`
                   : `${transactions.length} transactions recorded`}
               </div>
 
               {loading ? (
-                <div className="empty-state">
+                <div
+                  className="empty-state"
+                  role="status"
+                  aria-live="polite"
+                >
                   <strong>
                     Loading transactions...
                   </strong>
@@ -1059,7 +1151,7 @@ function App() {
                   </p>
                 </div>
               ) : filteredTransactions.length === 0 ? (
-                <div className="empty-state">
+                <div className="empty-state" role="status">
                   <strong>
                     {hasActiveFilters
                       ? "No matching transactions."
@@ -1071,6 +1163,26 @@ function App() {
                       ? "Try changing your search or filter options."
                       : "Add a transaction to start building your history."}
                   </p>
+
+                  {!hasActiveFilters && (
+                    <button
+                      className="secondary-button"
+                      type="button"
+                      onClick={focusTransactionForm}
+                    >
+                      Add your first transaction
+                    </button>
+                  )}
+
+                  {hasActiveFilters && (
+                    <button
+                      className="secondary-button"
+                      type="button"
+                      onClick={resetFilters}
+                    >
+                      Clear filters
+                    </button>
+                  )}
                 </div>
               ) : (
                 <div className="transaction-list">
@@ -1086,7 +1198,10 @@ function App() {
                           className="transaction-row"
                           key={transaction.id}
                         >
-                          <div className="transaction-icon">
+                          <div
+                            className="transaction-icon"
+                            aria-hidden="true"
+                          >
                             <Icon
                               name={categoryDetails.icon}
                               size={20}
@@ -1106,6 +1221,9 @@ function App() {
 
                           <strong
                             className={`transaction-amount ${transaction.type}`}
+                            aria-label={`${transaction.type === "income" ? "Income" : "Expense"} ${formatCurrency(
+                              Number(transaction.amount)
+                            )}`}
                           >
                             {transaction.type ===
                             "income"
@@ -1127,6 +1245,7 @@ function App() {
                                   transaction
                                 )
                               }
+                              aria-label={`Edit ${transaction.description}`}
                             >
                               Edit
                             </button>
@@ -1139,6 +1258,7 @@ function App() {
                                   transaction.id
                                 )
                               }
+                              aria-label={`Delete ${transaction.description}`}
                             >
                               Delete
                             </button>
@@ -1153,29 +1273,41 @@ function App() {
           </div>
 
           <aside className="side-column">
-            <section className="dashboard-card budget-card">
+            <section
+              className="dashboard-card budget-card"
+              aria-labelledby="monthly-budget-title"
+            >
               <div className="card-heading">
                 <div>
                   <p className="section-kicker">
                     MONTHLY PLAN
                   </p>
 
-                  <h2>Monthly budget</h2>
+                  <h2 id="monthly-budget-title">
+                    Monthly budget
+                  </h2>
                 </div>
 
-                <span className="budget-icon">
+                <span
+                  className="budget-icon"
+                  aria-hidden="true"
+                >
                   <Icon name="budget" size={22} />
                 </span>
               </div>
 
               <form onSubmit={handleBudgetSave}>
-                <label className="budget-input-label">
+                <label
+                  className="budget-input-label"
+                  htmlFor="budget-input"
+                >
                   Set monthly budget
 
                   <div className="budget-input-wrapper">
-                    <span>KES</span>
+                    <span aria-hidden="true">KES</span>
 
                     <input
+                      id="budget-input"
                       type="number"
                       min="0"
                       step="100"
@@ -1186,6 +1318,12 @@ function App() {
                         )
                       }
                       placeholder="50000"
+                      aria-label="Monthly budget amount in Kenyan shillings"
+                      aria-describedby={
+                        budgetError
+                          ? "budget-error"
+                          : undefined
+                      }
                     />
                   </div>
                 </label>
@@ -1194,6 +1332,7 @@ function App() {
                   className="primary-button"
                   type="submit"
                   disabled={savingBudget}
+                  aria-busy={savingBudget}
                 >
                   {savingBudget
                     ? "Saving..."
@@ -1202,12 +1341,20 @@ function App() {
               </form>
 
               {budgetError && (
-                <p className="form-error">
+                <p
+                  className="form-error"
+                  id="budget-error"
+                  role="alert"
+                  aria-live="polite"
+                >
                   {budgetError}
                 </p>
               )}
 
-              <div className="budget-overview">
+              <div
+                className="budget-overview"
+                aria-label="Monthly budget overview"
+              >
                 <div>
                   <span>Spent this month</span>
 
@@ -1233,7 +1380,16 @@ function App() {
                 </div>
               </div>
 
-              <div className="progress-track">
+              <div
+                className="progress-track"
+                role="progressbar"
+                aria-label="Monthly budget usage"
+                aria-valuemin="0"
+                aria-valuemax="100"
+                aria-valuenow={Math.round(
+                  budgetPercentage
+                )}
+              >
                 <div
                   className="progress-fill"
                   style={{
@@ -1266,14 +1422,19 @@ function App() {
               </p>
             </section>
 
-            <section className="dashboard-card category-card">
+            <section
+              className="dashboard-card category-card"
+              aria-labelledby="category-breakdown-title"
+            >
               <div className="card-heading">
                 <div>
                   <p className="section-kicker">
                     SPENDING BREAKDOWN
                   </p>
 
-                  <h2>Where your money goes</h2>
+                  <h2 id="category-breakdown-title">
+                    Where your money goes
+                  </h2>
                 </div>
               </div>
 
@@ -1304,7 +1465,16 @@ function App() {
                         </strong>
                       </div>
 
-                      <div className="category-progress">
+                      <div
+                        className="category-progress"
+                        role="progressbar"
+                        aria-label={`${item.name} spending`}
+                        aria-valuemin="0"
+                        aria-valuemax="100"
+                        aria-valuenow={Math.round(
+                          percentage
+                        )}
+                      >
                         <div
                           style={{
                             width: `${percentage}%`,
@@ -1317,8 +1487,14 @@ function App() {
               </div>
             </section>
 
-            <section className="insight-card">
-              <span className="insight-icon">
+            <section
+              className="insight-card"
+              aria-labelledby="insight-title"
+            >
+              <span
+                className="insight-icon"
+                aria-hidden="true"
+              >
                 <Icon name="insight" size={22} />
               </span>
 
@@ -1327,7 +1503,7 @@ function App() {
                   QUICK INSIGHT
                 </p>
 
-                <h3>
+                <h3 id="insight-title">
                   {largestCategory?.total > 0
                     ? `${largestCategory.name} is your biggest spending category.`
                     : "Start adding transactions to see your spending insights."}
