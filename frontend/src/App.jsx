@@ -1,11 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const API_BASE_URL = "/api";
 const API_URL = `${API_BASE_URL}/transactions`;
 const BUDGET_URL = `${API_BASE_URL}/budget`;
+const THEME_STORAGE_KEY = "smart-expense-theme";
 
-// Reusable SVG icons keep the interface consistent without
-// relying on emoji or external icon libraries.
 function Icon({ name, size = 20 }) {
   const commonProps = {
     width: size,
@@ -28,7 +27,6 @@ function Icon({ name, size = 20 }) {
         <path d="M17 3c2 1.5 3 3.5 3 6v2h-3" />
       </svg>
     ),
-
     transport: (
       <svg {...commonProps}>
         <path d="M5 17h14l-1-8H6l-1 8Z" />
@@ -37,27 +35,23 @@ function Icon({ name, size = 20 }) {
         <circle cx="16" cy="17" r="1.5" />
       </svg>
     ),
-
     bills: (
       <svg {...commonProps}>
         <path d="M13 2 5 13h6l-1 9 8-11h-6l1-9Z" />
       </svg>
     ),
-
     shopping: (
       <svg {...commonProps}>
         <path d="M5 8h14l-1 12H6L5 8Z" />
         <path d="M9 8V6a3 3 0 0 1 6 0v2" />
       </svg>
     ),
-
     entertainment: (
       <svg {...commonProps}>
         <rect x="3" y="5" width="18" height="14" rx="2" />
         <path d="m10 9 5 3-5 3V9Z" />
       </svg>
     ),
-
     health: (
       <svg {...commonProps}>
         <path d="M12 20s-7-4.35-7-10a4 4 0 0 1 7-2.65A4 4 0 0 1 19 10c0 5.65-7 10-7 10Z" />
@@ -65,7 +59,6 @@ function Icon({ name, size = 20 }) {
         <path d="M9 11h6" />
       </svg>
     ),
-
     education: (
       <svg {...commonProps}>
         <path d="m3 9 9-5 9 5-9 5-9-5Z" />
@@ -73,7 +66,6 @@ function Icon({ name, size = 20 }) {
         <path d="M21 9v6" />
       </svg>
     ),
-
     other: (
       <svg {...commonProps}>
         <circle cx="5" cy="12" r="1" />
@@ -81,7 +73,6 @@ function Icon({ name, size = 20 }) {
         <circle cx="19" cy="12" r="1" />
       </svg>
     ),
-
     balance: (
       <svg {...commonProps}>
         <circle cx="12" cy="12" r="8.5" />
@@ -89,7 +80,6 @@ function Icon({ name, size = 20 }) {
         <path d="M15 9.5c-.7-.7-1.7-1-3-1-1.7 0-3 .8-3 2s1.3 2 3 2 3 .8 3 2-1.3 2-3 2c-1.3 0-2.3-.3-3-1" />
       </svg>
     ),
-
     income: (
       <svg {...commonProps}>
         <path d="M5 15 15 5" />
@@ -97,7 +87,6 @@ function Icon({ name, size = 20 }) {
         <path d="M19 19H5V5" />
       </svg>
     ),
-
     expense: (
       <svg {...commonProps}>
         <path d="M5 9 15 19" />
@@ -105,24 +94,39 @@ function Icon({ name, size = 20 }) {
         <path d="M19 5H5v14" />
       </svg>
     ),
-
     budget: (
       <svg {...commonProps}>
         <circle cx="12" cy="12" r="8.5" />
         <circle cx="12" cy="12" r="3" />
       </svg>
     ),
-
     insight: (
       <svg {...commonProps}>
         <path d="m12 3 1.4 5.6L19 10l-5.6 1.4L12 17l-1.4-5.6L5 10l5.6-1.4L12 3Z" />
       </svg>
     ),
-
     search: (
       <svg {...commonProps}>
         <circle cx="11" cy="11" r="6.5" />
         <path d="m16 16 5 5" />
+      </svg>
+    ),
+    sun: (
+      <svg {...commonProps}>
+        <circle cx="12" cy="12" r="4" />
+        <path d="M12 2v2.5" />
+        <path d="M12 19.5V22" />
+        <path d="M4.2 4.2l1.8 1.8" />
+        <path d="M18 18l1.8 1.8" />
+        <path d="M2 12h2.5" />
+        <path d="M19.5 12H22" />
+        <path d="M4.2 19.8 6 18" />
+        <path d="M18 6l1.8-1.8" />
+      </svg>
+    ),
+    moon: (
+      <svg {...commonProps}>
+        <path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5Z" />
       </svg>
     ),
   };
@@ -141,31 +145,48 @@ const categories = [
   { name: "Other", icon: "other" },
 ];
 
+function getInitialTheme() {
+  if (typeof window === "undefined") {
+    return "light";
+  }
+
+  const storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
+
+  if (storedTheme === "light" || storedTheme === "dark") {
+    return storedTheme;
+  }
+
+  return window.matchMedia("(prefers-color-scheme: dark)").matches
+    ? "dark"
+    : "light";
+}
+
 function App() {
   const [transactions, setTransactions] = useState([]);
 
-  // Transaction form state.
   const [type, setType] = useState("expense");
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState("");
   const [category, setCategory] = useState("Food");
-  const [date, setDate] = useState(
-    new Date().toISOString().split("T")[0]
-  );
+  const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
 
-  // Form validation state is kept separate from API errors.
   const [formError, setFormError] = useState("");
 
-  // Transaction filtering state.
   const [filterType, setFilterType] = useState("all");
   const [filterCategory, setFilterCategory] = useState("all");
   const [filterStartDate, setFilterStartDate] = useState("");
   const [filterEndDate, setFilterEndDate] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
+  const [sortOption, setSortOption] = useState("newest");
 
   const [editingId, setEditingId] = useState(null);
 
-  // Monthly budget state.
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deletingId, setDeletingId] = useState(null);
+
+  const deleteCancelRef = useRef(null);
+  const deleteTriggerRef = useRef(null);
+
   const [monthlyBudget, setMonthlyBudget] = useState(0);
   const [budgetInput, setBudgetInput] = useState("");
   const [savingBudget, setSavingBudget] = useState(false);
@@ -175,20 +196,52 @@ function App() {
   const [error, setError] = useState("");
   const [budgetError, setBudgetError] = useState("");
 
+  const [theme, setTheme] = useState(getInitialTheme);
+
   useEffect(() => {
     loadDashboardData();
   }, []);
+
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+    window.localStorage.setItem(THEME_STORAGE_KEY, theme);
+  }, [theme]);
+
+  useEffect(() => {
+    if (!deleteTarget) {
+      return;
+    }
+
+    window.setTimeout(() => {
+      deleteCancelRef.current?.focus();
+    }, 0);
+
+    function handleDialogKeyDown(event) {
+      if (event.key === "Escape" && !deletingId) {
+        closeDeleteDialog();
+      }
+    }
+
+    document.addEventListener("keydown", handleDialogKeyDown);
+
+    return () => {
+      document.removeEventListener("keydown", handleDialogKeyDown);
+    };
+  }, [deleteTarget, deletingId]);
+
+  function toggleTheme() {
+    setTheme((currentTheme) => (currentTheme === "dark" ? "light" : "dark"));
+  }
 
   async function loadDashboardData() {
     try {
       setLoading(true);
       setError("");
 
-      const [transactionsResponse, budgetResponse] =
-        await Promise.all([
-          fetch(API_URL),
-          fetch(BUDGET_URL),
-        ]);
+      const [transactionsResponse, budgetResponse] = await Promise.all([
+        fetch(API_URL),
+        fetch(BUDGET_URL),
+      ]);
 
       if (!transactionsResponse.ok) {
         throw new Error("Failed to load transactions.");
@@ -198,16 +251,12 @@ function App() {
         throw new Error("Failed to load budget.");
       }
 
-      const transactionsData =
-        await transactionsResponse.json();
-
+      const transactionsData = await transactionsResponse.json();
       const budgetData = await budgetResponse.json();
 
       setTransactions(transactionsData);
       setMonthlyBudget(Number(budgetData.amount) || 0);
-      setBudgetInput(
-        budgetData.amount ? String(budgetData.amount) : ""
-      );
+      setBudgetInput(budgetData.amount ? String(budgetData.amount) : "");
     } catch (err) {
       setError(err.message || "Something went wrong.");
     } finally {
@@ -233,21 +282,11 @@ function App() {
     setSearchTerm("");
   }
 
-  // Move keyboard focus to the transaction form after actions
-  // that intentionally bring the user back to that section.
   function focusTransactionForm() {
     window.setTimeout(() => {
-      const formSection =
-        document.getElementById("transaction-form");
-
-      formSection?.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
-
-      document
-        .getElementById("transaction-description")
-        ?.focus();
+      const formSection = document.getElementById("transaction-form");
+      formSection?.scrollIntoView({ behavior: "smooth", block: "start" });
+      document.getElementById("transaction-description")?.focus();
     }, 50);
   }
 
@@ -259,7 +298,6 @@ function App() {
     setCategory(transaction.category);
     setDate(transaction.date);
     setFormError("");
-
     focusTransactionForm();
   }
 
@@ -268,7 +306,6 @@ function App() {
     focusTransactionForm();
   }
 
-  // Validate the transaction before sending it to the API.
   function validateTransactionForm() {
     const trimmedDescription = description.trim();
     const numericAmount = Number(amount);
@@ -321,28 +358,19 @@ function App() {
     if (validationError) {
       setFormError(validationError);
 
-      // Return focus to the first field that needs attention.
       window.setTimeout(() => {
         if (!description.trim()) {
-          document
-            .getElementById("transaction-description")
-            ?.focus();
+          document.getElementById("transaction-description")?.focus();
         } else if (
           amount.trim() === "" ||
           !Number.isFinite(Number(amount)) ||
           Number(amount) <= 0
         ) {
-          document
-            .getElementById("transaction-amount")
-            ?.focus();
+          document.getElementById("transaction-amount")?.focus();
         } else if (!category) {
-          document
-            .getElementById("transaction-category")
-            ?.focus();
+          document.getElementById("transaction-category")?.focus();
         } else if (!date) {
-          document
-            .getElementById("transaction-date")
-            ?.focus();
+          document.getElementById("transaction-date")?.focus();
         }
       }, 0);
 
@@ -366,9 +394,7 @@ function App() {
         isEditing ? `${API_URL}/${editingId}` : API_URL,
         {
           method: isEditing ? "PUT" : "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(transactionData),
         }
       );
@@ -376,9 +402,7 @@ function App() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(
-          data.error || "Failed to save transaction."
-        );
+        throw new Error(data.error || "Failed to save transaction.");
       }
 
       if (isEditing) {
@@ -396,11 +420,8 @@ function App() {
 
       resetTransactionForm();
 
-      // Keep keyboard users in a predictable place after saving.
       window.setTimeout(() => {
-        document
-          .getElementById("transaction-history")
-          ?.focus();
+        document.getElementById("transaction-history")?.focus();
       }, 0);
     } catch (err) {
       setError(err.message || "Failed to save transaction.");
@@ -409,31 +430,43 @@ function App() {
     }
   }
 
-  async function handleDelete(transactionId) {
-    const confirmed = window.confirm(
-      "Are you sure you want to delete this transaction?"
-    );
+  function handleDelete(transaction, event) {
+    deleteTriggerRef.current = event.currentTarget;
+    setDeleteTarget(transaction);
+  }
 
-    if (!confirmed) {
+  function closeDeleteDialog() {
+    if (deletingId !== null) {
       return;
     }
 
+    setDeleteTarget(null);
+
+    window.setTimeout(() => {
+      deleteTriggerRef.current?.focus();
+      deleteTriggerRef.current = null;
+    }, 0);
+  }
+
+  async function confirmDeleteTransaction() {
+    if (!deleteTarget) {
+      return;
+    }
+
+    const transactionId = deleteTarget.id;
+
     try {
+      setDeletingId(transactionId);
       setError("");
 
-      const response = await fetch(
-        `${API_URL}/${transactionId}`,
-        {
-          method: "DELETE",
-        }
-      );
+      const response = await fetch(`${API_URL}/${transactionId}`, {
+        method: "DELETE",
+      });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(
-          data.error || "Failed to delete transaction."
-        );
+        throw new Error(data.error || "Failed to delete transaction.");
       }
 
       setTransactions((currentTransactions) =>
@@ -445,8 +478,17 @@ function App() {
       if (editingId === transactionId) {
         resetTransactionForm();
       }
+
+      setDeleteTarget(null);
+
+      window.setTimeout(() => {
+        deleteTriggerRef.current?.focus();
+        deleteTriggerRef.current = null;
+      }, 0);
     } catch (err) {
       setError(err.message || "Failed to delete transaction.");
+    } finally {
+      setDeletingId(null);
     }
   }
 
@@ -465,79 +507,73 @@ function App() {
 
       const response = await fetch(BUDGET_URL, {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          amount: value,
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amount: value }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(
-          data.error || "Failed to update budget."
-        );
+        throw new Error(data.error || "Failed to update budget.");
       }
 
       setMonthlyBudget(Number(data.amount) || 0);
       setBudgetInput(String(data.amount));
 
-      // Return focus to the budget input so keyboard users
-      // receive a predictable confirmation point.
       window.setTimeout(() => {
         document.getElementById("budget-input")?.focus();
       }, 0);
     } catch (err) {
-      setBudgetError(
-        err.message || "Failed to update budget."
-      );
+      setBudgetError(err.message || "Failed to update budget.");
     } finally {
       setSavingBudget(false);
     }
   }
 
-  const filteredTransactions = transactions.filter(
-    (transaction) => {
-      const normalizedSearch = searchTerm
-        .trim()
-        .toLowerCase();
+  const filteredTransactions = transactions.filter((transaction) => {
+    const normalizedSearch = searchTerm.trim().toLowerCase();
 
-      const matchesSearch =
-        !normalizedSearch ||
-        transaction.description
-          ?.toLowerCase()
-          .includes(normalizedSearch) ||
-        transaction.category
-          ?.toLowerCase()
-          .includes(normalizedSearch);
+    const matchesSearch =
+      !normalizedSearch ||
+      transaction.description?.toLowerCase().includes(normalizedSearch) ||
+      transaction.category?.toLowerCase().includes(normalizedSearch);
 
-      const matchesType =
-        filterType === "all" ||
-        transaction.type === filterType;
+    const matchesType = filterType === "all" || transaction.type === filterType;
 
-      const matchesCategory =
-        filterCategory === "all" ||
-        transaction.category === filterCategory;
+    const matchesCategory =
+      filterCategory === "all" || transaction.category === filterCategory;
 
-      const matchesStartDate =
-        !filterStartDate ||
-        transaction.date >= filterStartDate;
+    const matchesStartDate =
+      !filterStartDate || transaction.date >= filterStartDate;
 
-      const matchesEndDate =
-        !filterEndDate ||
-        transaction.date <= filterEndDate;
+    const matchesEndDate = !filterEndDate || transaction.date <= filterEndDate;
 
-      return (
-        matchesSearch &&
-        matchesType &&
-        matchesCategory &&
-        matchesStartDate &&
-        matchesEndDate
-      );
+    return (
+      matchesSearch &&
+      matchesType &&
+      matchesCategory &&
+      matchesStartDate &&
+      matchesEndDate
+    );
+  });
+
+  const sortedTransactions = [...filteredTransactions].sort((a, b) => {
+    switch (sortOption) {
+      case "oldest":
+        return a.date.localeCompare(b.date);
+      case "highest":
+        return Number(b.amount) - Number(a.amount);
+      case "lowest":
+        return Number(a.amount) - Number(b.amount);
+      case "az":
+        return a.description.localeCompare(b.description);
+      case "za":
+        return b.description.localeCompare(a.description);
+      case "newest":
+      default:
+        return b.date.localeCompare(a.date);
     }
-  );
+  });
 
   const hasActiveFilters =
     searchTerm.trim() !== "" ||
@@ -548,19 +584,11 @@ function App() {
 
   const totalIncome = transactions
     .filter((transaction) => transaction.type === "income")
-    .reduce(
-      (total, transaction) =>
-        total + Number(transaction.amount),
-      0
-    );
+    .reduce((total, transaction) => total + Number(transaction.amount), 0);
 
   const totalExpenses = transactions
     .filter((transaction) => transaction.type === "expense")
-    .reduce(
-      (total, transaction) =>
-        total + Number(transaction.amount),
-      0
-    );
+    .reduce((total, transaction) => total + Number(transaction.amount), 0);
 
   const balance = totalIncome - totalExpenses;
 
@@ -570,37 +598,24 @@ function App() {
 
   const monthlyExpenses = transactions
     .filter((transaction) => {
-      if (
-        transaction.type !== "expense" ||
-        !transaction.date
-      ) {
+      if (transaction.type !== "expense" || !transaction.date) {
         return false;
       }
 
-      const transactionDate = new Date(
-        `${transaction.date}T00:00:00`
-      );
+      const transactionDate = new Date(`${transaction.date}T00:00:00`);
 
       return (
         transactionDate.getFullYear() === currentYear &&
         transactionDate.getMonth() === currentMonth
       );
     })
-    .reduce(
-      (total, transaction) =>
-        total + Number(transaction.amount),
-      0
-    );
+    .reduce((total, transaction) => total + Number(transaction.amount), 0);
 
-  const budgetRemaining =
-    monthlyBudget - monthlyExpenses;
+  const budgetRemaining = monthlyBudget - monthlyExpenses;
 
   const budgetPercentage =
     monthlyBudget > 0
-      ? Math.min(
-          (monthlyExpenses / monthlyBudget) * 100,
-          100
-        )
+      ? Math.min((monthlyExpenses / monthlyBudget) * 100, 100)
       : 0;
 
   let budgetStatus = "No monthly budget set";
@@ -608,45 +623,26 @@ function App() {
     "Set a monthly budget to start tracking your spending limit.";
 
   if (monthlyBudget > 0 && monthlyExpenses > monthlyBudget) {
-    const amountOverBudget =
-      monthlyExpenses - monthlyBudget;
-
+    const amountOverBudget = monthlyExpenses - monthlyBudget;
     budgetStatus = "Over budget";
-    budgetStatusDetail = `${formatCurrency(
-      amountOverBudget
-    )} over your monthly budget.`;
-  } else if (
-    monthlyBudget > 0 &&
-    budgetPercentage >= 80
-  ) {
+    budgetStatusDetail = `${formatCurrency(amountOverBudget)} over your monthly budget.`;
+  } else if (monthlyBudget > 0 && budgetPercentage >= 80) {
     budgetStatus = "Budget nearly used";
-    budgetStatusDetail = `${Math.round(
-      budgetPercentage
-    )}% of your monthly budget has been used.`;
+    budgetStatusDetail = `${Math.round(budgetPercentage)}% of your monthly budget has been used.`;
   } else if (monthlyBudget > 0) {
     budgetStatus = "Within budget";
-    budgetStatusDetail = `${Math.round(
-      budgetPercentage
-    )}% of your monthly budget has been used.`;
+    budgetStatusDetail = `${Math.round(budgetPercentage)}% of your monthly budget has been used.`;
   }
 
   const categoryTotals = categories.map((item) => {
     const total = transactions
       .filter(
         (transaction) =>
-          transaction.type === "expense" &&
-          transaction.category === item.name
+          transaction.type === "expense" && transaction.category === item.name
       )
-      .reduce(
-        (sum, transaction) =>
-          sum + Number(transaction.amount),
-        0
-      );
+      .reduce((sum, transaction) => sum + Number(transaction.amount), 0);
 
-    return {
-      ...item,
-      total,
-    };
+    return { ...item, total };
   });
 
   const largestCategory = [...categoryTotals].sort(
@@ -663,13 +659,47 @@ function App() {
 
   function getCategoryDetails(categoryName) {
     return (
-      categories.find(
-        (item) => item.name === categoryName
-      ) || {
+      categories.find((item) => item.name === categoryName) || {
         name: categoryName,
         icon: "other",
       }
     );
+  }
+
+  function exportTransactionsToCsv() {
+    const header = ["Date", "Type", "Description", "Category", "Amount"];
+
+    function escapeCsvValue(value) {
+      const stringValue = String(value ?? "");
+      if (/[",\n]/.test(stringValue)) {
+        return `"${stringValue.replace(/"/g, '""')}"`;
+      }
+      return stringValue;
+    }
+
+    const rows = sortedTransactions.map((transaction) => [
+      transaction.date,
+      transaction.type,
+      transaction.description,
+      transaction.category,
+      transaction.amount,
+    ]);
+
+    const csvContent = [header, ...rows]
+      .map((row) => row.map(escapeCsvValue).join(","))
+      .join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    const today = new Date().toISOString().split("T")[0];
+
+    link.href = url;
+    link.download = `transactions-${today}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   }
 
   return (
@@ -686,35 +716,40 @@ function App() {
           </div>
         </div>
 
-        <div className="nav-status">
-          <span className="status-dot" aria-hidden="true"></span>
-          Finance overview
+        <div className="nav-actions">
+          <button
+            className="theme-toggle-button"
+            type="button"
+            onClick={toggleTheme}
+            aria-pressed={theme === "dark"}
+            aria-label={
+              theme === "dark" ? "Switch to light mode" : "Switch to dark mode"
+            }
+          >
+            <Icon name={theme === "dark" ? "sun" : "moon"} size={16} />
+            <span>{theme === "dark" ? "Light mode" : "Dark mode"}</span>
+          </button>
+
+          <div className="nav-status">
+            <span className="status-dot" aria-hidden="true"></span>
+            Finance overview
+          </div>
         </div>
       </nav>
 
       <main className="dashboard-container">
-        <section
-          className="hero-section"
-          aria-labelledby="dashboard-title"
-        >
+        <section className="hero-section" aria-labelledby="dashboard-title">
           <div>
-            <p className="section-kicker">
-              YOUR MONEY AT A GLANCE
-            </p>
-
-            <h1 id="dashboard-title">
-              Take control of your money.
-            </h1>
-
+            <p className="section-kicker">YOUR MONEY AT A GLANCE</p>
+            <h1 id="dashboard-title">Take control of your money.</h1>
             <p className="hero-description">
-              Track your spending, manage your budget, and
-              understand where your money goes.
+              Track your spending, manage your budget, and understand where
+              your money goes.
             </p>
           </div>
 
           <div className="hero-date">
             <span>Today</span>
-
             <strong>
               {new Intl.DateTimeFormat("en-US", {
                 month: "short",
@@ -726,77 +761,49 @@ function App() {
         </section>
 
         {error && (
-          <div
-            className="alert-message"
-            role="alert"
-            aria-live="assertive"
-          >
+          <div className="alert-message" role="alert" aria-live="assertive">
             {error}
           </div>
         )}
 
-        <section
-          className="summary-grid"
-          aria-label="Financial summary"
-        >
+        <section className="summary-grid" aria-label="Financial summary">
           <article className="financial-summary-card balance-card">
             <div className="financial-summary-header">
               <div>
-                <span className="summary-label">
-                  Balance
-                </span>
-
+                <span className="summary-label">Balance</span>
                 <h2>{formatCurrency(balance)}</h2>
               </div>
-
               <span className="summary-icon">
                 <Icon name="balance" size={22} />
               </span>
             </div>
-
-            <p className="summary-note">
-              Income minus all recorded expenses
-            </p>
+            <p className="summary-note">Income minus all recorded expenses</p>
           </article>
 
           <article className="financial-summary-card income-card">
             <div className="financial-summary-header">
               <div>
-                <span className="summary-label">
-                  Total income
-                </span>
-
+                <span className="summary-label">Total income</span>
                 <h2>{formatCurrency(totalIncome)}</h2>
               </div>
-
               <span className="summary-icon">
                 <Icon name="income" size={22} />
               </span>
             </div>
-
-            <p className="summary-note">
-              All income recorded so far
-            </p>
+            <p className="summary-note">All income recorded so far</p>
           </article>
 
           <article className="financial-summary-card expense-card">
             <div className="financial-summary-header">
               <div>
-                <span className="summary-label">
-                  Total expenses
-                </span>
-
+                <span className="summary-label">Total expenses</span>
                 <h2>{formatCurrency(totalExpenses)}</h2>
               </div>
-
               <span className="summary-icon">
                 <Icon name="expense" size={22} />
               </span>
             </div>
-
-            <p className="summary-note">
-              All expenses recorded so far
-            </p>
+            <p className="summary-note">All expenses recorded so far</p>
           </article>
         </section>
 
@@ -810,11 +817,8 @@ function App() {
               <div className="card-heading">
                 <div>
                   <p className="section-kicker">
-                    {editingId !== null
-                      ? "UPDATE TRANSACTION"
-                      : "ADD TRANSACTION"}
+                    {editingId !== null ? "UPDATE TRANSACTION" : "ADD TRANSACTION"}
                   </p>
-
                   <h2 id="transaction-form-title">
                     {editingId !== null
                       ? "Edit your transaction"
@@ -849,15 +853,12 @@ function App() {
                 onSubmit={handleSubmit}
                 noValidate
                 aria-describedby={
-                  formError
-                    ? "transaction-form-error"
-                    : undefined
+                  formError ? "transaction-form-error" : undefined
                 }
               >
                 <div className="form-grid">
                   <label htmlFor="transaction-type">
                     Type
-
                     <select
                       id="transaction-type"
                       value={type}
@@ -866,19 +867,13 @@ function App() {
                         setFormError("");
                       }}
                     >
-                      <option value="expense">
-                        Expense
-                      </option>
-
-                      <option value="income">
-                        Income
-                      </option>
+                      <option value="expense">Expense</option>
+                      <option value="income">Income</option>
                     </select>
                   </label>
 
                   <label htmlFor="transaction-description">
                     Description
-
                     <input
                       id="transaction-description"
                       type="text"
@@ -890,17 +885,13 @@ function App() {
                       placeholder="e.g. Groceries"
                       maxLength="100"
                       aria-invalid={
-                        formError &&
-                        !description.trim()
-                          ? "true"
-                          : "false"
+                        formError && !description.trim() ? "true" : "false"
                       }
                     />
                   </label>
 
                   <label htmlFor="transaction-amount">
                     Amount
-
                     <input
                       id="transaction-amount"
                       type="number"
@@ -913,9 +904,7 @@ function App() {
                       }}
                       placeholder="0"
                       aria-invalid={
-                        formError &&
-                        (!amount ||
-                          Number(amount) <= 0)
+                        formError && (!amount || Number(amount) <= 0)
                           ? "true"
                           : "false"
                       }
@@ -924,7 +913,6 @@ function App() {
 
                   <label htmlFor="transaction-category">
                     Category
-
                     <select
                       id="transaction-category"
                       value={category}
@@ -934,23 +922,16 @@ function App() {
                       }}
                     >
                       {categories.map((item) => (
-                        <option
-                          key={item.name}
-                          value={item.name}
-                        >
+                        <option key={item.name} value={item.name}>
                           {item.name}
                         </option>
                       ))}
-
-                      <option value="Salary">
-                        Salary
-                      </option>
+                      <option value="Salary">Salary</option>
                     </select>
                   </label>
 
                   <label htmlFor="transaction-date">
                     Date
-
                     <input
                       id="transaction-date"
                       type="date"
@@ -959,11 +940,7 @@ function App() {
                         setDate(event.target.value);
                         setFormError("");
                       }}
-                      aria-invalid={
-                        formError && !date
-                          ? "true"
-                          : "false"
-                      }
+                      aria-invalid={formError && !date ? "true" : "false"}
                     />
                   </label>
                 </div>
@@ -993,37 +970,38 @@ function App() {
             >
               <div className="card-heading">
                 <div>
-                  <p className="section-kicker">
-                    TRANSACTION HISTORY
-                  </p>
-
-                  <h2 id="transaction-history-title">
-                    Your transactions
-                  </h2>
+                  <p className="section-kicker">TRANSACTION HISTORY</p>
+                  <h2 id="transaction-history-title">Your transactions</h2>
                 </div>
 
                 <span
                   className="transaction-count"
-                  aria-label={`${filteredTransactions.length} transactions shown`}
+                  aria-label={`${sortedTransactions.length} transactions shown`}
                 >
-                  {filteredTransactions.length}
+                  {sortedTransactions.length}
                 </span>
+
+                <button
+                  className="secondary-button"
+                  type="button"
+                  onClick={exportTransactionsToCsv}
+                  disabled={sortedTransactions.length === 0}
+                  aria-label="Export shown transactions to CSV"
+                >
+                  Export CSV
+                </button>
               </div>
 
               <div className="transaction-search">
                 <div className="search-input-wrapper">
                   <Icon name="search" size={18} />
-
                   <input
                     type="search"
                     value={searchTerm}
-                    onChange={(event) =>
-                      setSearchTerm(event.target.value)
-                    }
+                    onChange={(event) => setSearchTerm(event.target.value)}
                     placeholder="Search transactions..."
                     aria-label="Search transactions"
                   />
-
                   {searchTerm && (
                     <button
                       type="button"
@@ -1040,80 +1018,64 @@ function App() {
               <div className="filter-bar" aria-label="Transaction filters">
                 <select
                   value={filterType}
-                  onChange={(event) =>
-                    setFilterType(event.target.value)
-                  }
+                  onChange={(event) => setFilterType(event.target.value)}
                   aria-label="Filter by transaction type"
                 >
                   <option value="all">All types</option>
                   <option value="income">Income</option>
-                  <option value="expense">
-                    Expenses
-                  </option>
+                  <option value="expense">Expenses</option>
                 </select>
 
                 <select
                   value={filterCategory}
-                  onChange={(event) =>
-                    setFilterCategory(event.target.value)
-                  }
+                  onChange={(event) => setFilterCategory(event.target.value)}
                   aria-label="Filter by category"
                 >
-                  <option value="all">
-                    All categories
-                  </option>
-
+                  <option value="all">All categories</option>
                   {categories.map((item) => (
-                    <option
-                      key={item.name}
-                      value={item.name}
-                    >
+                    <option key={item.name} value={item.name}>
                       {item.name}
                     </option>
                   ))}
-
                   <option value="Salary">Salary</option>
                 </select>
 
-                <label
-                  className="date-filter"
-                  htmlFor="filter-start-date"
-                >
+                <label className="date-filter" htmlFor="filter-start-date">
                   <span>From</span>
-
                   <input
                     id="filter-start-date"
                     type="date"
                     value={filterStartDate}
                     max={filterEndDate || undefined}
-                    onChange={(event) =>
-                      setFilterStartDate(
-                        event.target.value
-                      )
-                    }
+                    onChange={(event) => setFilterStartDate(event.target.value)}
                     aria-label="Filter transactions from date"
                   />
                 </label>
 
-                <label
-                  className="date-filter"
-                  htmlFor="filter-end-date"
-                >
+                <label className="date-filter" htmlFor="filter-end-date">
                   <span>To</span>
-
                   <input
                     id="filter-end-date"
                     type="date"
                     value={filterEndDate}
                     min={filterStartDate || undefined}
-                    onChange={(event) =>
-                      setFilterEndDate(
-                        event.target.value
-                      )
-                    }
+                    onChange={(event) => setFilterEndDate(event.target.value)}
                     aria-label="Filter transactions to date"
                   />
                 </label>
+
+                <select
+                  value={sortOption}
+                  onChange={(event) => setSortOption(event.target.value)}
+                  aria-label="Sort transactions"
+                >
+                  <option value="newest">Newest first</option>
+                  <option value="oldest">Oldest first</option>
+                  <option value="highest">Highest amount</option>
+                  <option value="lowest">Lowest amount</option>
+                  <option value="az">Description A–Z</option>
+                  <option value="za">Description Z–A</option>
+                </select>
 
                 <button
                   className="clear-filters-button"
@@ -1126,44 +1088,29 @@ function App() {
                 </button>
               </div>
 
-              <div
-                className="summary-note"
-                aria-live="polite"
-              >
+              <div className="summary-note" aria-live="polite">
                 {hasActiveFilters
-                  ? `Showing ${filteredTransactions.length} of ${transactions.length} transactions`
+                  ? `Showing ${sortedTransactions.length} of ${transactions.length} transactions`
                   : `${transactions.length} transactions recorded`}
               </div>
 
               {loading ? (
-                <div
-                  className="empty-state"
-                  role="status"
-                  aria-live="polite"
-                >
-                  <strong>
-                    Loading transactions...
-                  </strong>
-
-                  <p>
-                    Please wait while your financial data
-                    loads.
-                  </p>
+                <div className="empty-state" role="status" aria-live="polite">
+                  <strong>Loading transactions...</strong>
+                  <p>Please wait while your financial data loads.</p>
                 </div>
-              ) : filteredTransactions.length === 0 ? (
+              ) : sortedTransactions.length === 0 ? (
                 <div className="empty-state" role="status">
                   <strong>
                     {hasActiveFilters
                       ? "No matching transactions."
                       : "No transactions found."}
                   </strong>
-
                   <p>
                     {hasActiveFilters
                       ? "Try changing your search or filter options."
                       : "Add a transaction to start building your history."}
                   </p>
-
                   {!hasActiveFilters && (
                     <button
                       className="secondary-button"
@@ -1173,7 +1120,6 @@ function App() {
                       Add your first transaction
                     </button>
                   )}
-
                   {hasActiveFilters && (
                     <button
                       className="secondary-button"
@@ -1186,87 +1132,57 @@ function App() {
                 </div>
               ) : (
                 <div className="transaction-list">
-                  {filteredTransactions.map(
-                    (transaction) => {
-                      const categoryDetails =
-                        getCategoryDetails(
-                          transaction.category
-                        );
+                  {sortedTransactions.map((transaction) => {
+                    const categoryDetails = getCategoryDetails(
+                      transaction.category
+                    );
 
-                      return (
-                        <article
-                          className="transaction-row"
-                          key={transaction.id}
+                    return (
+                      <article className="transaction-row" key={transaction.id}>
+                        <div className="transaction-icon" aria-hidden="true">
+                          <Icon name={categoryDetails.icon} size={20} />
+                        </div>
+
+                        <div className="transaction-details">
+                          <strong>{transaction.description}</strong>
+                          <span>
+                            {transaction.category} · {transaction.date}
+                          </span>
+                        </div>
+
+                        <strong
+                          className={`transaction-amount ${transaction.type}`}
+                          aria-label={`${
+                            transaction.type === "income" ? "Income" : "Expense"
+                          } ${formatCurrency(Number(transaction.amount))}`}
                         >
-                          <div
-                            className="transaction-icon"
-                            aria-hidden="true"
+                          {transaction.type === "income" ? "+" : "-"}
+                          {formatCurrency(Number(transaction.amount))}
+                        </strong>
+
+                        <div className="transaction-actions">
+                          <button
+                            className="edit-button"
+                            type="button"
+                            onClick={() => startEditing(transaction)}
+                            aria-label={`Edit ${transaction.description}`}
                           >
-                            <Icon
-                              name={categoryDetails.icon}
-                              size={20}
-                            />
-                          </div>
+                            Edit
+                          </button>
 
-                          <div className="transaction-details">
-                            <strong>
-                              {transaction.description}
-                            </strong>
-
-                            <span>
-                              {transaction.category} ·{" "}
-                              {transaction.date}
-                            </span>
-                          </div>
-
-                          <strong
-                            className={`transaction-amount ${transaction.type}`}
-                            aria-label={`${transaction.type === "income" ? "Income" : "Expense"} ${formatCurrency(
-                              Number(transaction.amount)
-                            )}`}
+                          <button
+                            className="delete-button"
+                            type="button"
+                            onClick={(event) => handleDelete(transaction, event)}
+                            aria-label={`Delete ${transaction.description}`}
+                            disabled={deletingId !== null}
                           >
-                            {transaction.type ===
-                            "income"
-                              ? "+"
-                              : "-"}
-                            {formatCurrency(
-                              Number(
-                                transaction.amount
-                              )
-                            )}
-                          </strong>
-
-                          <div className="transaction-actions">
-                            <button
-                              className="edit-button"
-                              type="button"
-                              onClick={() =>
-                                startEditing(
-                                  transaction
-                                )
-                              }
-                              aria-label={`Edit ${transaction.description}`}
-                            >
-                              Edit
-                            </button>
-
-                            <button
-                              className="delete-button"
-                              type="button"
-                              onClick={() =>
-                                handleDelete(
-                                  transaction.id
-                                )
-                              }
-                              aria-label={`Delete ${transaction.description}`}
-                            >
-                              Delete
-                            </button>
-                          </div>
-                        </article>
-                      );
-                    }
-                  )}
+                            Delete
+                          </button>
+                        </div>
+                      </article>
+                    );
+                  })}
                 </div>
               )}
             </section>
@@ -1279,51 +1195,29 @@ function App() {
             >
               <div className="card-heading">
                 <div>
-                  <p className="section-kicker">
-                    MONTHLY PLAN
-                  </p>
-
-                  <h2 id="monthly-budget-title">
-                    Monthly budget
-                  </h2>
+                  <p className="section-kicker">MONTHLY PLAN</p>
+                  <h2 id="monthly-budget-title">Monthly budget</h2>
                 </div>
-
-                <span
-                  className="budget-icon"
-                  aria-hidden="true"
-                >
+                <span className="budget-icon" aria-hidden="true">
                   <Icon name="budget" size={22} />
                 </span>
               </div>
 
               <form onSubmit={handleBudgetSave}>
-                <label
-                  className="budget-input-label"
-                  htmlFor="budget-input"
-                >
+                <label className="budget-input-label" htmlFor="budget-input">
                   Set monthly budget
-
                   <div className="budget-input-wrapper">
                     <span aria-hidden="true">KES</span>
-
                     <input
                       id="budget-input"
                       type="number"
                       min="0"
                       step="100"
                       value={budgetInput}
-                      onChange={(event) =>
-                        setBudgetInput(
-                          event.target.value
-                        )
-                      }
+                      onChange={(event) => setBudgetInput(event.target.value)}
                       placeholder="50000"
                       aria-label="Monthly budget amount in Kenyan shillings"
-                      aria-describedby={
-                        budgetError
-                          ? "budget-error"
-                          : undefined
-                      }
+                      aria-describedby={budgetError ? "budget-error" : undefined}
                     />
                   </div>
                 </label>
@@ -1334,9 +1228,7 @@ function App() {
                   disabled={savingBudget}
                   aria-busy={savingBudget}
                 >
-                  {savingBudget
-                    ? "Saving..."
-                    : "Save budget"}
+                  {savingBudget ? "Saving..." : "Save budget"}
                 </button>
               </form>
 
@@ -1351,31 +1243,15 @@ function App() {
                 </p>
               )}
 
-              <div
-                className="budget-overview"
-                aria-label="Monthly budget overview"
-              >
+              <div className="budget-overview" aria-label="Monthly budget overview">
                 <div>
                   <span>Spent this month</span>
-
-                  <strong>
-                    {formatCurrency(monthlyExpenses)}
-                  </strong>
+                  <strong>{formatCurrency(monthlyExpenses)}</strong>
                 </div>
-
                 <div>
                   <span>Remaining</span>
-
-                  <strong
-                    className={
-                      budgetRemaining < 0
-                        ? "negative-value"
-                        : ""
-                    }
-                  >
-                    {formatCurrency(
-                      budgetRemaining
-                    )}
+                  <strong className={budgetRemaining < 0 ? "negative-value" : ""}>
+                    {formatCurrency(budgetRemaining)}
                   </strong>
                 </div>
               </div>
@@ -1386,40 +1262,28 @@ function App() {
                 aria-label="Monthly budget usage"
                 aria-valuemin="0"
                 aria-valuemax="100"
-                aria-valuenow={Math.round(
-                  budgetPercentage
-                )}
+                aria-valuenow={Math.round(budgetPercentage)}
               >
                 <div
                   className="progress-fill"
-                  style={{
-                    width: `${budgetPercentage}%`,
-                  }}
+                  style={{ width: `${budgetPercentage}%` }}
                 ></div>
               </div>
 
               <div className="budget-progress-label">
                 <span>
                   {monthlyBudget > 0
-                    ? `${Math.round(
-                        budgetPercentage
-                      )}% used`
+                    ? `${Math.round(budgetPercentage)}% used`
                     : "No budget set"}
                 </span>
-
-                {monthlyBudget > 0 &&
-                monthlyExpenses > monthlyBudget ? (
-                  <span className="over-budget">
-                    {budgetStatus}
-                  </span>
+                {monthlyBudget > 0 && monthlyExpenses > monthlyBudget ? (
+                  <span className="over-budget">{budgetStatus}</span>
                 ) : (
                   <span>{budgetStatus}</span>
                 )}
               </div>
 
-              <p className="summary-note">
-                {budgetStatusDetail}
-              </p>
+              <p className="summary-note">{budgetStatusDetail}</p>
             </section>
 
             <section
@@ -1428,58 +1292,34 @@ function App() {
             >
               <div className="card-heading">
                 <div>
-                  <p className="section-kicker">
-                    SPENDING BREAKDOWN
-                  </p>
-
-                  <h2 id="category-breakdown-title">
-                    Where your money goes
-                  </h2>
+                  <p className="section-kicker">SPENDING BREAKDOWN</p>
+                  <h2 id="category-breakdown-title">Where your money goes</h2>
                 </div>
               </div>
 
               <div className="category-list">
                 {categoryTotals.map((item) => {
                   const percentage =
-                    totalExpenses > 0
-                      ? (item.total / totalExpenses) *
-                        100
-                      : 0;
+                    totalExpenses > 0 ? (item.total / totalExpenses) * 100 : 0;
 
                   return (
-                    <div
-                      className="category-item"
-                      key={item.name}
-                    >
+                    <div className="category-item" key={item.name}>
                       <div className="category-item-top">
                         <span>
-                          <Icon
-                            name={item.icon}
-                            size={16}
-                          />
+                          <Icon name={item.icon} size={16} />
                           {item.name}
                         </span>
-
-                        <strong>
-                          {formatCurrency(item.total)}
-                        </strong>
+                        <strong>{formatCurrency(item.total)}</strong>
                       </div>
-
                       <div
                         className="category-progress"
                         role="progressbar"
                         aria-label={`${item.name} spending`}
                         aria-valuemin="0"
                         aria-valuemax="100"
-                        aria-valuenow={Math.round(
-                          percentage
-                        )}
+                        aria-valuenow={Math.round(percentage)}
                       >
-                        <div
-                          style={{
-                            width: `${percentage}%`,
-                          }}
-                        ></div>
+                        <div style={{ width: `${percentage}%` }}></div>
                       </div>
                     </div>
                   );
@@ -1487,51 +1327,143 @@ function App() {
               </div>
             </section>
 
-            <section
-              className="insight-card"
-              aria-labelledby="insight-title"
-            >
-              <span
-                className="insight-icon"
-                aria-hidden="true"
-              >
+            <section className="insight-card" aria-labelledby="insight-title">
+              <span className="insight-icon" aria-hidden="true">
                 <Icon name="insight" size={22} />
               </span>
 
               <div>
-                <p className="section-kicker">
-                  QUICK INSIGHT
-                </p>
-
+                <p className="section-kicker">QUICK INSIGHT</p>
                 <h3 id="insight-title">
                   {largestCategory?.total > 0
                     ? `${largestCategory.name} is your biggest spending category.`
                     : "Start adding transactions to see your spending insights."}
                 </h3>
-
                 {largestCategory?.total > 0 && (
                   <p>
-                    You have recorded{" "}
-                    {formatCurrency(
-                      largestCategory.total
-                    )}{" "}
-                    in {largestCategory.name} expenses.
+                    You have recorded {formatCurrency(largestCategory.total)} in{" "}
+                    {largestCategory.name} expenses.
                   </p>
                 )}
               </div>
             </section>
-                    </aside>
+          </aside>
         </section>
 
         <footer className="site-footer">
           <p>© 2026 Smart Expense Tracker</p>
-
           <nav aria-label="Legal">
             <a href="/privacy.html">Privacy Policy</a>
             <a href="/terms.html">Terms & Conditions</a>
           </nav>
         </footer>
       </main>
+
+      {deleteTarget && (
+        <div
+          className="delete-dialog-overlay"
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget && deletingId === null) {
+              closeDeleteDialog();
+            }
+          }}
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 1000,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "24px",
+            background: "rgba(20, 20, 18, 0.55)",
+          }}
+        >
+          <section
+            className="delete-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-dialog-title"
+            aria-describedby="delete-dialog-description"
+            style={{
+              width: "min(100%, 460px)",
+              padding: "28px",
+              borderRadius: "18px",
+              background: "var(--paper, #ffffff)",
+              color: "var(--ink, #1f1f1c)",
+              boxShadow: "0 24px 70px rgba(0, 0, 0, 0.22)",
+            }}
+          >
+            <p className="section-kicker" style={{ marginTop: 0 }}>
+              DELETE TRANSACTION
+            </p>
+
+            <h2 id="delete-dialog-title" style={{ marginTop: "8px", marginBottom: "12px" }}>
+              Delete this transaction?
+            </h2>
+
+            <p id="delete-dialog-description">
+              This action cannot be undone. The following transaction will be
+              permanently removed.
+            </p>
+
+            <div
+              style={{
+                margin: "20px 0",
+                padding: "16px",
+                borderRadius: "12px",
+                background: "var(--cream, #f6f3ed)",
+                border: "1px solid var(--soft-line, #e5e1d8)",
+              }}
+            >
+              <strong>{deleteTarget.description}</strong>
+              <div
+                style={{
+                  marginTop: "6px",
+                  color: "var(--muted, #686860)",
+                  fontSize: "0.92rem",
+                }}
+              >
+                {deleteTarget.category} · {deleteTarget.date}
+              </div>
+              <div style={{ marginTop: "10px", fontWeight: 700 }}>
+                {deleteTarget.type === "income" ? "+" : "-"}
+                {formatCurrency(Number(deleteTarget.amount))}
+              </div>
+            </div>
+
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "flex-end",
+                gap: "10px",
+                flexWrap: "wrap",
+              }}
+            >
+              <button
+                ref={deleteCancelRef}
+                className="secondary-button"
+                type="button"
+                onClick={closeDeleteDialog}
+                disabled={deletingId !== null}
+              >
+                Cancel
+              </button>
+
+              <button
+                className="delete-button"
+                type="button"
+                onClick={confirmDeleteTransaction}
+                disabled={deletingId !== null}
+                aria-busy={deletingId !== null}
+                style={{ minWidth: "110px" }}
+              >
+                {deletingId !== null ? "Deleting..." : "Delete"}
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
     </div>
   );
 }
