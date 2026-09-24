@@ -195,6 +195,7 @@ function App() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [budgetError, setBudgetError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
 
   const [theme, setTheme] = useState(getInitialTheme);
 
@@ -206,6 +207,18 @@ function App() {
     document.documentElement.setAttribute("data-theme", theme);
     window.localStorage.setItem(THEME_STORAGE_KEY, theme);
   }, [theme]);
+
+  useEffect(() => {
+    if (!successMessage) {
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      setSuccessMessage("");
+    }, 4000);
+
+    return () => window.clearTimeout(timer);
+  }, [successMessage]);
 
   useEffect(() => {
     if (!deleteTarget) {
@@ -411,11 +424,13 @@ function App() {
             transaction.id === editingId ? data : transaction
           )
         );
+        setSuccessMessage("Transaction updated.");
       } else {
         setTransactions((currentTransactions) => [
           data,
           ...currentTransactions,
         ]);
+        setSuccessMessage("Transaction added.");
       }
 
       resetTransactionForm();
@@ -480,6 +495,7 @@ function App() {
       }
 
       setDeleteTarget(null);
+      setSuccessMessage("Transaction deleted.");
 
       window.setTimeout(() => {
         deleteTriggerRef.current?.focus();
@@ -519,6 +535,7 @@ function App() {
 
       setMonthlyBudget(Number(data.amount) || 0);
       setBudgetInput(String(data.amount));
+      setSuccessMessage("Monthly budget updated.");
 
       window.setTimeout(() => {
         document.getElementById("budget-input")?.focus();
@@ -759,6 +776,12 @@ function App() {
             </strong>
           </div>
         </section>
+
+        {successMessage && (
+          <div className="success-message" role="status" aria-live="polite">
+            {successMessage}
+          </div>
+        )}
 
         {error && (
           <div className="alert-message" role="alert" aria-live="assertive">
