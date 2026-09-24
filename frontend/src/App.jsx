@@ -161,6 +161,14 @@ function getInitialTheme() {
     : "light";
 }
 
+function getErrorMessage(err, fallback) {
+  if (err instanceof TypeError) {
+    return "Unable to reach the server. Check your connection and try again.";
+  }
+
+  return err.message || fallback;
+}
+
 function App() {
   const [transactions, setTransactions] = useState([]);
 
@@ -194,6 +202,7 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [loadFailed, setLoadFailed] = useState(false);
   const [budgetError, setBudgetError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
@@ -250,6 +259,7 @@ function App() {
     try {
       setLoading(true);
       setError("");
+      setLoadFailed(false);
 
       const [transactionsResponse, budgetResponse] = await Promise.all([
         fetch(API_URL),
@@ -257,11 +267,11 @@ function App() {
       ]);
 
       if (!transactionsResponse.ok) {
-        throw new Error("Failed to load transactions.");
+        throw new Error("The server couldn't return your transactions. Please try again.");
       }
 
       if (!budgetResponse.ok) {
-        throw new Error("Failed to load budget.");
+        throw new Error("The server couldn't return your budget. Please try again.");
       }
 
       const transactionsData = await transactionsResponse.json();
@@ -271,7 +281,8 @@ function App() {
       setMonthlyBudget(Number(budgetData.amount) || 0);
       setBudgetInput(budgetData.amount ? String(budgetData.amount) : "");
     } catch (err) {
-      setError(err.message || "Something went wrong.");
+      setError(getErrorMessage(err, "Something went wrong while loading your data."));
+      setLoadFailed(true);
     } finally {
       setLoading(false);
     }
@@ -439,7 +450,7 @@ function App() {
         document.getElementById("transaction-history")?.focus();
       }, 0);
     } catch (err) {
-      setError(err.message || "Failed to save transaction.");
+      setError(getErrorMessage(err, "Failed to save transaction."));
     } finally {
       setSubmitting(false);
     }
@@ -502,7 +513,7 @@ function App() {
         deleteTriggerRef.current = null;
       }, 0);
     } catch (err) {
-      setError(err.message || "Failed to delete transaction.");
+      setError(getErrorMessage(err, "Failed to delete transaction."));
     } finally {
       setDeletingId(null);
     }
@@ -541,7 +552,7 @@ function App() {
         document.getElementById("budget-input")?.focus();
       }, 0);
     } catch (err) {
-      setBudgetError(err.message || "Failed to update budget.");
+      setBudgetError(getErrorMessage(err, "Failed to update budget."));
     } finally {
       setSavingBudget(false);
     }
@@ -785,7 +796,16 @@ function App() {
 
         {error && (
           <div className="alert-message" role="alert" aria-live="assertive">
-            {error}
+            <span>{error}</span>
+            {loadFailed && (
+              <button
+                className="secondary-button retry-button"
+                type="button"
+                onClick={loadDashboardData}
+              >
+                Retry
+              </button>
+            )}
           </div>
         )}
 
