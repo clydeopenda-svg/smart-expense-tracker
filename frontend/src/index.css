@@ -295,3 +295,51 @@ button:focus-visible, select:focus-visible, input:focus-visible { outline: 3px s
   .site-footer { align-items: flex-start; flex-direction: column; gap: 12px; }
   .site-footer nav { flex-wrap: wrap; gap: 12px 18px; }
 }
+.auth-main {
+  width: min(480px, calc(100% - 48px));
+  margin: 60px auto;
+}
+.auth-card { padding: 32px; }
+.auth-card h2 {
+  margin: 0 0 20px;
+  font-size: 24px;
+  font-weight: 900;
+  letter-spacing: -.03em;
+  text-transform: uppercase;
+}
+.auth-tabs {
+  display: flex;
+  margin-bottom: 24px;
+  border: 2px solid var(--ink);
+}
+.auth-tab {
+  flex: 1;
+  min-height: 44px;
+  border: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+.auth-tab.active { background: var(--ink); color: var(--paper); }
+.auth-tab:not(.active) + .auth-tab { border-left: 2px solid var(--ink); }
+.auth-card form label {
+  display: block;
+  margin-bottom: 15px;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+.auth-submit-button { width: 100%; margin-top: 6px; }
+.user-badge {
+  font-size: 9px;
+  gap: 6px;
+}
+@media (max-width: 500px) {
+  .auth-main { margin: 30px auto; }
+  .auth-card { padding: 22px; }
+}
