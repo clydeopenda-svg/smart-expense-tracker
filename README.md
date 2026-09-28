@@ -1,26 +1,36 @@
 # Smart Expense Tracker
 
-A full-stack personal finance dashboard for recording transactions, managing a monthly budget, and understanding spending patterns.
+A full-stack personal finance dashboard for recording transactions, managing a monthly budget, and understanding spending patterns. Each user has their own account and their own private data.
 
 ## Features
+
+### Authentication
+
+* User registration with username and password
+* Secure login with JWT-based sessions
+* Passwords hashed, never stored in plain text
+* Sessions persist across page reloads
+* Automatic logout on an expired or invalid session
+* All transaction and budget data is scoped to the logged-in user
 
 ### Transaction management
 
 * Add income and expense transactions
 * Edit existing transactions
-* Delete transactions
+* Delete transactions, with an accessible confirmation dialog
 * Categorize transactions
 * Record transaction dates
 * Validate transaction information before submission
 
-### Transaction search and filtering
+### Transaction search, filtering, and sorting
 
-* Search transactions by description
+* Search transactions by description or category
 * Filter by transaction type
 * Filter by category
-* Filter by start date
-* Filter by end date
-* Combine multiple filters
+* Filter by start date and end date
+* Combine multiple filters at once
+* Sort by newest, oldest, highest amount, lowest amount, or description (A–Z / Z–A)
+* Export the currently filtered and sorted transactions to CSV
 
 ### Financial dashboard
 
@@ -42,11 +52,14 @@ A full-stack personal finance dashboard for recording transactions, managing a m
 
 ### User experience
 
+* Light and dark theme, remembered between visits
 * Responsive layout for desktop, tablet, and mobile
-* Keyboard-accessible controls
-* Accessible labels and focus states
-* Clear loading and error states
-* Empty states for sections without data
+* Success feedback for adding, editing, deleting transactions, and updating the budget
+* Clear error messages, with a Retry option if the initial data load fails
+* Loading and empty states for sections without data
+* Keyboard-accessible controls with visible focus states
+* Skip-to-content link for keyboard users
+* Respects the operating system's reduced-motion preference
 * Consistent dashboard icons and visual styling
 
 ### Supporting pages
@@ -69,6 +82,8 @@ A full-stack personal finance dashboard for recording transactions, managing a m
 * Python
 * Flask
 * Flask-CORS
+* PyJWT
+* Werkzeug (password hashing)
 * SQLite
 
 ### Testing
@@ -184,6 +199,10 @@ npm run dev
 
 Open the local URL provided by Vite in your browser.
 
+### 4. Create an account
+
+The app opens on a login/register screen. Register a new username and password to create your account — every user's transactions and budget are private to that account.
+
 ## Running Tests
 
 The backend tests use pytest.
@@ -219,19 +238,21 @@ Additional pages are available at:
 
 ## API
 
-The Flask backend provides API endpoints for managing transactions and the monthly budget.
+The Flask backend provides API endpoints for authentication, transactions, and the monthly budget.
 
-The frontend communicates with the backend through the `/api` base path.
+The frontend communicates with the backend through the `/api` base path. Every route except `/api/auth/register` and `/api/auth/login` requires a valid `Authorization: Bearer <token>` header, obtained by registering or logging in.
 
 ## Data Storage
 
-Transaction and budget information is stored using SQLite during local development.
+User accounts, transaction, and budget information are stored using SQLite during local development. Passwords are hashed before storage; the raw password is never saved.
 
 The application is intended as a personal finance tracking tool. Users should maintain appropriate backups and should not treat the application as a replacement for official financial records.
 
 ## Deployment Notes
 
 The current backend uses a local SQLite database for development and demonstration purposes.
+
+Before deploying, set a real, secret value for the `SECRET_KEY` environment variable (used to sign authentication tokens). The code falls back to a hardcoded development value, which is not safe to use in production.
 
 Before using the application as a production service for multiple users, the database layer should be migrated to a persistent hosted database appropriate for the deployment environment.
 
@@ -255,7 +276,7 @@ Use of the application is subject to the [Terms & Conditions](./frontend/public/
 
 The project is structured as a separate React frontend and Flask backend.
 
-Frontend development uses Vite for the development server and production build process. The backend uses Flask to provide the application's API and SQLite for local data persistence.
+Frontend development uses Vite for the development server and production build process. The backend uses Flask to provide the application's API, PyJWT for authentication tokens, and SQLite for local data persistence.
 
 ## License
 
