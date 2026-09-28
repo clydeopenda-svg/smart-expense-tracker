@@ -354,6 +354,20 @@ def test_invalid_transaction(client, auth_headers):
     assert "error" in response.get_json()
 
 
+def test_rejects_non_padded_transaction_date(client, auth_headers):
+    response = create_transaction(
+        client,
+        auth_headers,
+        description="Invalid date",
+        date="2026-2-3",
+    )
+
+    assert response.status_code == 400
+    assert response.get_json()["error"] == (
+        "Date must be a valid date in YYYY-MM-DD format"
+    )
+
+
 def test_delete_transaction(client, auth_headers):
     create_response = create_transaction(
         client,

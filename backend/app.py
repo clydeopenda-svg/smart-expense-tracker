@@ -136,8 +136,8 @@ def parse_date(value):
         return False
 
     try:
-        datetime.strptime(value.strip(), "%Y-%m-%d")
-        return True
+        parsed_date = datetime.strptime(value.strip(), "%Y-%m-%d")
+        return parsed_date.strftime("%Y-%m-%d") == value.strip()
     except ValueError:
         return False
 
