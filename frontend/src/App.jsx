@@ -197,6 +197,7 @@ function App() {
   const [authMode, setAuthMode] = useState("login");
   const [authUsername, setAuthUsername] = useState("");
   const [authPassword, setAuthPassword] = useState("");
+  const [authConfirmPassword, setAuthConfirmPassword] = useState("");
   const [authError, setAuthError] = useState("");
   const [authSubmitting, setAuthSubmitting] = useState(false);
 
@@ -316,15 +317,49 @@ function App() {
     return response;
   }
 
+  function validateAuthForm() {
+    const trimmedUsername = authUsername.trim();
+
+    if (!trimmedUsername) {
+      return "Please enter a username.";
+    }
+
+    if (authMode === "register") {
+      if (trimmedUsername.length < 3 || trimmedUsername.length > 50) {
+        return "Username must be between 3 and 50 characters.";
+      }
+
+      if (!/^[a-zA-Z0-9_.-]+$/.test(trimmedUsername)) {
+        return "Username can only contain letters, numbers, dots, underscores and hyphens.";
+      }
+    }
+
+    if (!authPassword) {
+      return "Please enter a password.";
+    }
+
+    if (authMode === "register") {
+      if (authPassword.length < 8) {
+        return "Password must be at least 8 characters.";
+      }
+
+      if (authPassword !== authConfirmPassword) {
+        return "Passwords do not match.";
+      }
+    }
+
+    return "";
+  }
+
   async function handleAuthSubmit(event) {
     event.preventDefault();
 
     setAuthError("");
 
-    const trimmedUsername = authUsername.trim();
+    const validationError = validateAuthForm();
 
-    if (!trimmedUsername || !authPassword) {
-      setAuthError("Please enter a username and password.");
+    if (validationError) {
+      setAuthError(validationError);
       return;
     }
 
@@ -337,7 +372,7 @@ function App() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          username: trimmedUsername,
+          username: authUsername.trim(),
           password: authPassword,
         }),
       });
@@ -354,6 +389,7 @@ function App() {
       setAuthToken(data.token);
       setCurrentUser(data.user);
       setAuthPassword("");
+      setAuthConfirmPassword("");
     } catch (err) {
       setAuthError(getErrorMessage(err, "Unable to complete that request."));
     } finally {
@@ -839,6 +875,10 @@ function App() {
   if (!authToken) {
     return (
       <div className="app-shell auth-shell">
+        <a href="#auth-title" className="skip-link">
+          Skip to main content
+        </a>
+
         <nav className="top-navigation" aria-label="Main navigation">
           <div className="brand">
             <div className="brand-mark" aria-hidden="true">
@@ -864,7 +904,7 @@ function App() {
           </button>
         </nav>
 
-        <main className="auth-main">
+        <main className="auth-main" id="main-content">
           <section className="dashboard-card auth-card" aria-labelledby="auth-title">
             <div className="auth-tabs" role="tablist" aria-label="Choose login or register">
               <button
@@ -875,6 +915,7 @@ function App() {
                 onClick={() => {
                   setAuthMode("login");
                   setAuthError("");
+                  setAuthConfirmPassword("");
                 }}
               >
                 Log in
@@ -887,13 +928,14 @@ function App() {
                 onClick={() => {
                   setAuthMode("register");
                   setAuthError("");
+                  setAuthConfirmPassword("");
                 }}
               >
                 Register
               </button>
             </div>
 
-            <h2 id="auth-title">
+            <h2 id="auth-title" tabIndex="-1">
               {authMode === "login" ? "Welcome back" : "Create your account"}
             </h2>
 
@@ -915,6 +957,11 @@ function App() {
                   autoComplete="username"
                 />
               </label>
+              {authMode === "register" && (
+                <p className="auth-hint">
+                  3–50 characters. Letters, numbers, dots, underscores and hyphens only.
+                </p>
+              )}
 
               <label htmlFor="auth-password">
                 Password
@@ -931,6 +978,23 @@ function App() {
                   }
                 />
               </label>
+              {authMode === "register" && (
+                <p className="auth-hint">At least 8 characters.</p>
+              )}
+
+              {authMode === "register" && (
+                <label htmlFor="auth-confirm-password">
+                  Confirm password
+                  <input
+                    id="auth-confirm-password"
+                    type="password"
+                    value={authConfirmPassword}
+                    onChange={(event) => setAuthConfirmPassword(event.target.value)}
+                    placeholder="Re-enter your password"
+                    autoComplete="new-password"
+                  />
+                </label>
+              )}
 
               <button
                 className="primary-button auth-submit-button"
@@ -953,6 +1017,10 @@ function App() {
 
   return (
     <div className="app-shell">
+      <a href="#main-content" className="skip-link">
+        Skip to main content
+      </a>
+
       <nav className="top-navigation" aria-label="Main navigation">
         <div className="brand">
           <div className="brand-mark" aria-hidden="true">
@@ -996,7 +1064,7 @@ function App() {
         </div>
       </nav>
 
-      <main className="dashboard-container">
+      <main className="dashboard-container" id="main-content">
         <section className="hero-section" aria-labelledby="dashboard-title">
           <div>
             <p className="section-kicker">YOUR MONEY AT A GLANCE</p>
