@@ -8,6 +8,7 @@
   --gray: #e9e7e2;
   --danger: #8b0000;
   --success: #1a7431;
+  --gold: #c9a227;
 }
 
 :root[data-theme="dark"] {
@@ -20,6 +21,7 @@
   --gray: #262521;
   --danger: #ff6b6b;
   --success: #4ade80;
+  --gold: #d9b84a;
 }
 
 * { box-sizing: border-box; }
@@ -180,7 +182,8 @@ button:disabled { cursor: not-allowed; }
 .financial-summary-header h2 { margin: 12px 0 0; font-size: clamp(26px, 3vw, 38px); font-weight: 900; letter-spacing: -.06em; overflow-wrap: anywhere; }
 .summary-icon, .budget-icon, .insight-icon, .transaction-icon { display: grid; flex-shrink: 0; place-items: center; border: 2px solid var(--ink); background: var(--gray); color: var(--ink); }
 .summary-icon, .budget-icon, .insight-icon { width: 40px; height: 40px; }
-.balance-card .summary-icon, .income-card .summary-icon, .expense-card .summary-icon, .budget-icon, .insight-icon { background: var(--ink); color: var(--paper); }
+.balance-card .summary-icon, .income-card .summary-icon, .expense-card .summary-icon, .budget-icon { background: var(--ink); color: var(--paper); }
+.insight-icon { background: var(--gold); color: var(--ink); border-color: var(--gold); }
 .summary-note { margin: 18px 0 0; color: var(--muted); font-size: 11px; line-height: 1.5; }
 
 .dashboard-layout { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(320px, .75fr); gap: 14px; }
@@ -216,7 +219,7 @@ input::placeholder { color: var(--muted); }
 .date-filter input { min-height: 42px; padding: 11px 4px; border: 0; background: transparent; box-shadow: none; }
 .date-filter input:focus { box-shadow: none; }
 .clear-filters-button:disabled { opacity: .45; }
-.transaction-count { min-width: 30px; height: 30px; display: grid; place-items: center; border: 2px solid var(--ink); background: var(--ink); color: var(--paper); font-size: 11px; font-weight: 900; }
+.transaction-count { min-width: 30px; height: 30px; display: grid; place-items: center; border: 2px solid var(--gold); background: var(--gold); color: var(--ink); font-size: 11px; font-weight: 900; }
 .transaction-list { display: flex; flex-direction: column; gap: 7px; min-width: 0; }
 .transaction-row { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto auto; align-items: center; gap: 13px; min-width: 0; padding: 12px; border: 2px solid var(--ink); background: var(--paper); }
 .transaction-row:hover { background: var(--gray); }
@@ -244,7 +247,7 @@ input::placeholder { color: var(--muted); }
 .negative-value, .over-budget { color: var(--danger); }
 .budget-card .progress-track { margin-top: 18px; }
 .progress-track { width: 100%; height: 14px; overflow: hidden; border: 2px solid var(--ink); background: var(--paper); }
-.progress-fill { height: 100%; background: var(--ink); transition: width .35s ease; }
+.progress-fill { height: 100%; background: var(--gold); transition: width .35s ease; }
 .budget-progress-label { display: flex; justify-content: space-between; gap: 12px; margin-top: 8px; color: var(--muted); font-size: 9px; font-weight: 900; letter-spacing: .06em; text-transform: uppercase; }
 .category-list { display: flex; flex-direction: column; gap: 17px; }
 .category-item-top { display: flex; align-items: center; justify-content: space-between; gap: 15px; margin-bottom: 8px; }
