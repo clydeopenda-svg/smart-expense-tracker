@@ -3,7 +3,10 @@ import { useEffect, useRef, useState } from "react";
 const API_BASE_URL = "/api";
 const API_URL = `${API_BASE_URL}/transactions`;
 const BUDGET_URL = `${API_BASE_URL}/budget`;
+const AUTH_URL = `${API_BASE_URL}/auth`;
 const THEME_STORAGE_KEY = "smart-expense-theme";
+const TOKEN_STORAGE_KEY = "smart-expense-token";
+const USER_STORAGE_KEY = "smart-expense-user";
 
 function Icon({ name, size = 20 }) {
   const commonProps = {
@@ -129,6 +132,19 @@ function Icon({ name, size = 20 }) {
         <path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5Z" />
       </svg>
     ),
+    user: (
+      <svg {...commonProps}>
+        <circle cx="12" cy="8" r="3.5" />
+        <path d="M5 20c1.2-3.5 4-5.5 7-5.5s5.8 2 7 5.5" />
+      </svg>
+    ),
+    logout: (
+      <svg {...commonProps}>
+        <path d="M9 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h3" />
+        <path d="M15 16l4-4-4-4" />
+        <path d="M19 12H9" />
+      </svg>
+    ),
   };
 
   return icons[name] || icons.other;
@@ -170,6 +186,21 @@ function getErrorMessage(err, fallback) {
 }
 
 function App() {
+  const [authToken, setAuthToken] = useState(() =>
+    window.localStorage.getItem(TOKEN_STORAGE_KEY)
+  );
+  const [currentUser, setCurrentUser] = useState(() => {
+    const stored = window.localStorage.getItem(USER_STORAGE_KEY);
+    return stored ? JSON.parse(stored) : null;
+  });
+
+  const [authMode, setAuthMode] = useState("login");
+  const [authUsername, setAuthUsername] = useState("");
+  const [authPassword, setAuthPassword] = useState("");
+  const [authConfirmPassword, setAuthConfirmPassword] = useState("");
+  const [authError, setAuthError] = useState("");
+  const [authSubmitting, setAuthSubmitting] = useState(false);
+
   const [transactions, setTransactions] = useState([]);
 
   const [type, setType] = useState("expense");
@@ -209,8 +240,10 @@ function App() {
   const [theme, setTheme] = useState(getInitialTheme);
 
   useEffect(() => {
-    loadDashboardData();
-  }, []);
+    if (authToken) {
+      loadDashboardData();
+    }
+  }, [authToken]);
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
@@ -255,6 +288,115 @@ function App() {
     setTheme((currentTheme) => (currentTheme === "dark" ? "light" : "dark"));
   }
 
+  function handleLogout() {
+    window.localStorage.removeItem(TOKEN_STORAGE_KEY);
+    window.localStorage.removeItem(USER_STORAGE_KEY);
+    setAuthToken(null);
+    setCurrentUser(null);
+    setTransactions([]);
+    setMonthlyBudget(0);
+    setBudgetInput("");
+    resetTransactionForm();
+    resetFilters();
+  }
+
+  async function authorizedFetch(url, options = {}) {
+    const response = await fetch(url, {
+      ...options,
+      headers: {
+        ...(options.headers || {}),
+        Authorization: `Bearer ${authToken}`,
+      },
+    });
+
+    if (response.status === 401) {
+      handleLogout();
+      throw new Error("Your session expired. Please log in again.");
+    }
+
+    return response;
+  }
+
+  function validateAuthForm() {
+    const trimmedUsername = authUsername.trim();
+
+    if (!trimmedUsername) {
+      return "Please enter a username.";
+    }
+
+    if (authMode === "register") {
+      if (trimmedUsername.length < 3 || trimmedUsername.length > 50) {
+        return "Username must be between 3 and 50 characters.";
+      }
+
+      if (!/^[a-zA-Z0-9_.-]+$/.test(trimmedUsername)) {
+        return "Username can only contain letters, numbers, dots, underscores and hyphens.";
+      }
+    }
+
+    if (!authPassword) {
+      return "Please enter a password.";
+    }
+
+    if (authMode === "register") {
+      if (authPassword.length < 8) {
+        return "Password must be at least 8 characters.";
+      }
+
+      if (authPassword !== authConfirmPassword) {
+        return "Passwords do not match.";
+      }
+    }
+
+    return "";
+  }
+
+  async function handleAuthSubmit(event) {
+    event.preventDefault();
+
+    setAuthError("");
+
+    const validationError = validateAuthForm();
+
+    if (validationError) {
+      setAuthError(validationError);
+      return;
+    }
+
+    try {
+      setAuthSubmitting(true);
+
+      const endpoint = authMode === "login" ? "login" : "register";
+
+      const response = await fetch(`${AUTH_URL}/${endpoint}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username: authUsername.trim(),
+          password: authPassword,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Unable to complete that request.");
+      }
+
+      window.localStorage.setItem(TOKEN_STORAGE_KEY, data.token);
+      window.localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(data.user));
+
+      setAuthToken(data.token);
+      setCurrentUser(data.user);
+      setAuthPassword("");
+      setAuthConfirmPassword("");
+    } catch (err) {
+      setAuthError(getErrorMessage(err, "Unable to complete that request."));
+    } finally {
+      setAuthSubmitting(false);
+    }
+  }
+
   async function loadDashboardData() {
     try {
       setLoading(true);
@@ -262,8 +404,8 @@ function App() {
       setLoadFailed(false);
 
       const [transactionsResponse, budgetResponse] = await Promise.all([
-        fetch(API_URL),
-        fetch(BUDGET_URL),
+        authorizedFetch(API_URL),
+        authorizedFetch(BUDGET_URL),
       ]);
 
       if (!transactionsResponse.ok) {
@@ -414,7 +556,7 @@ function App() {
 
       const isEditing = editingId !== null;
 
-      const response = await fetch(
+      const response = await authorizedFetch(
         isEditing ? `${API_URL}/${editingId}` : API_URL,
         {
           method: isEditing ? "PUT" : "POST",
@@ -485,7 +627,7 @@ function App() {
       setDeletingId(transactionId);
       setError("");
 
-      const response = await fetch(`${API_URL}/${transactionId}`, {
+      const response = await authorizedFetch(`${API_URL}/${transactionId}`, {
         method: "DELETE",
       });
 
@@ -532,7 +674,7 @@ function App() {
         throw new Error("Please enter a valid budget amount.");
       }
 
-      const response = await fetch(BUDGET_URL, {
+      const response = await authorizedFetch(BUDGET_URL, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ amount: value }),
@@ -730,8 +872,155 @@ function App() {
     URL.revokeObjectURL(url);
   }
 
+  if (!authToken) {
+    return (
+      <div className="app-shell auth-shell">
+        <a href="#auth-title" className="skip-link">
+          Skip to main content
+        </a>
+
+        <nav className="top-navigation" aria-label="Main navigation">
+          <div className="brand">
+            <div className="brand-mark" aria-hidden="true">
+              S
+            </div>
+            <div>
+              <strong>Smart Expense</strong>
+              <span>Personal finance dashboard</span>
+            </div>
+          </div>
+
+          <button
+            className="theme-toggle-button"
+            type="button"
+            onClick={toggleTheme}
+            aria-pressed={theme === "dark"}
+            aria-label={
+              theme === "dark" ? "Switch to light mode" : "Switch to dark mode"
+            }
+          >
+            <Icon name={theme === "dark" ? "sun" : "moon"} size={16} />
+            <span>{theme === "dark" ? "Light mode" : "Dark mode"}</span>
+          </button>
+        </nav>
+
+        <main className="auth-main" id="main-content">
+          <section className="dashboard-card auth-card" aria-labelledby="auth-title">
+            <div className="auth-tabs" role="tablist" aria-label="Choose login or register">
+              <button
+                type="button"
+                role="tab"
+                aria-selected={authMode === "login"}
+                className={authMode === "login" ? "auth-tab active" : "auth-tab"}
+                onClick={() => {
+                  setAuthMode("login");
+                  setAuthError("");
+                  setAuthConfirmPassword("");
+                }}
+              >
+                Log in
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={authMode === "register"}
+                className={authMode === "register" ? "auth-tab active" : "auth-tab"}
+                onClick={() => {
+                  setAuthMode("register");
+                  setAuthError("");
+                  setAuthConfirmPassword("");
+                }}
+              >
+                Register
+              </button>
+            </div>
+
+            <h2 id="auth-title" tabIndex="-1">
+              {authMode === "login" ? "Welcome back" : "Create your account"}
+            </h2>
+
+            {authError && (
+              <div className="form-error" role="alert" aria-live="polite">
+                {authError}
+              </div>
+            )}
+
+            <form onSubmit={handleAuthSubmit} noValidate>
+              <label htmlFor="auth-username">
+                Username
+                <input
+                  id="auth-username"
+                  type="text"
+                  value={authUsername}
+                  onChange={(event) => setAuthUsername(event.target.value)}
+                  placeholder="e.g. clyde"
+                  autoComplete="username"
+                />
+              </label>
+              {authMode === "register" && (
+                <p className="auth-hint">
+                  3–50 characters. Letters, numbers, dots, underscores and hyphens only.
+                </p>
+              )}
+
+              <label htmlFor="auth-password">
+                Password
+                <input
+                  id="auth-password"
+                  type="password"
+                  value={authPassword}
+                  onChange={(event) => setAuthPassword(event.target.value)}
+                  placeholder={
+                    authMode === "register" ? "At least 8 characters" : "Your password"
+                  }
+                  autoComplete={
+                    authMode === "login" ? "current-password" : "new-password"
+                  }
+                />
+              </label>
+              {authMode === "register" && (
+                <p className="auth-hint">At least 8 characters.</p>
+              )}
+
+              {authMode === "register" && (
+                <label htmlFor="auth-confirm-password">
+                  Confirm password
+                  <input
+                    id="auth-confirm-password"
+                    type="password"
+                    value={authConfirmPassword}
+                    onChange={(event) => setAuthConfirmPassword(event.target.value)}
+                    placeholder="Re-enter your password"
+                    autoComplete="new-password"
+                  />
+                </label>
+              )}
+
+              <button
+                className="primary-button auth-submit-button"
+                type="submit"
+                disabled={authSubmitting}
+                aria-busy={authSubmitting}
+              >
+                {authSubmitting
+                  ? "Please wait..."
+                  : authMode === "login"
+                  ? "Log in"
+                  : "Create account"}
+              </button>
+            </form>
+          </section>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="app-shell">
+      <a href="#main-content" className="skip-link">
+        Skip to main content
+      </a>
+
       <nav className="top-navigation" aria-label="Main navigation">
         <div className="brand">
           <div className="brand-mark" aria-hidden="true">
@@ -758,14 +1047,24 @@ function App() {
             <span>{theme === "dark" ? "Light mode" : "Dark mode"}</span>
           </button>
 
-          <div className="nav-status">
-            <span className="status-dot" aria-hidden="true"></span>
-            Finance overview
+          <div className="nav-status user-badge">
+            <Icon name="user" size={14} />
+            {currentUser?.username}
           </div>
+
+          <button
+            className="theme-toggle-button"
+            type="button"
+            onClick={handleLogout}
+            aria-label="Log out"
+          >
+            <Icon name="logout" size={16} />
+            <span>Log out</span>
+          </button>
         </div>
       </nav>
 
-      <main className="dashboard-container">
+      <main className="dashboard-container" id="main-content">
         <section className="hero-section" aria-labelledby="dashboard-title">
           <div>
             <p className="section-kicker">YOUR MONEY AT A GLANCE</p>
