@@ -83,6 +83,7 @@ A full-stack personal finance dashboard for recording transactions, managing a m
 * Flask
 * Flask-CORS
 * PyJWT
+* python-dotenv
 * Werkzeug (password hashing)
 * SQLite
 
