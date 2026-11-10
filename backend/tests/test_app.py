@@ -605,3 +605,48 @@ def test_budget_scoped_per_user(client, auth_headers):
 
     assert response.status_code == 200
     assert response.get_json()["amount"] == 0
+
+VALID_TRANSACTION = {
+    "type": "expense",
+    "description": "Lunch",
+    "amount": 10,
+    "category": "Food",
+    "date": "2026-01-15",
+}
+
+
+@pytest.mark.parametrize("bad_type", [["expense"], {"kind": "expense"}])
+def test_rejects_non_string_transaction_type(client, auth_headers, bad_type):
+    response = client.post(
+        "/api/transactions",
+        json={**VALID_TRANSACTION, "type": bad_type},
+        headers=auth_headers,
+    )
+
+    assert response.status_code == 400
+    assert response.get_json()["error"] == "Type must be income or expense"
+
+
+# 10 ** 400 is valid JSON but too large to convert to a float.
+@pytest.mark.parametrize("bad_amount", [True, 10 ** 400], ids=["boolean", "huge"])
+def test_rejects_unusable_transaction_amount(client, auth_headers, bad_amount):
+    response = client.post(
+        "/api/transactions",
+        json={**VALID_TRANSACTION, "amount": bad_amount},
+        headers=auth_headers,
+    )
+
+    assert response.status_code == 400
+    assert response.get_json()["error"] == "Amount must be a valid number"
+
+
+@pytest.mark.parametrize("bad_amount", [True, 10 ** 400], ids=["boolean", "huge"])
+def test_rejects_unusable_budget_amount(client, auth_headers, bad_amount):
+    response = client.put(
+        "/api/budget",
+        json={"amount": bad_amount},
+        headers=auth_headers,
+    )
+
+    assert response.status_code == 400
+    assert response.get_json()["error"] == "Budget amount must be a valid number"

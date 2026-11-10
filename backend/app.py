@@ -145,9 +145,14 @@ def parse_date(value):
 
 
 def parse_amount(value):
+    # bool is a subclass of int, so JSON true would otherwise be saved as 1.0.
+    if isinstance(value, bool):
+        return None
+
     try:
         numeric_value = float(value)
-    except (TypeError, ValueError):
+    # OverflowError comes from a valid JSON integer too large for a float.
+    except (TypeError, ValueError, OverflowError):
         return None
 
     if not math.isfinite(numeric_value):
@@ -166,7 +171,9 @@ def validate_transaction(data):
     category = data.get("category")
     date = data.get("date")
 
-    if transaction_type not in TRANSACTION_TYPES:
+    # Check the type first: a JSON list or object is unhashable, so testing
+    # it for membership in a set would raise TypeError and return a 500.
+    if not isinstance(transaction_type, str) or transaction_type not in TRANSACTION_TYPES:
         return "Type must be income or expense"
 
     if not isinstance(description, str) or not description.strip():
